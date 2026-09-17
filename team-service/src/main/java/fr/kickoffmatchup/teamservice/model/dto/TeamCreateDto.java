@@ -1,6 +1,8 @@
 package fr.kickoffmatchup.teamservice.model.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import jakarta.validation.constraints.Size;
 
@@ -19,9 +21,10 @@ public class TeamCreateDto {
     private String city;
 
     @NotBlank(message = "Zip code cannot be blank")
-    @Size(max = 20, message = "Zip code cannot exceed 20 characters")
+    @Size(max = 5, message = "Zip code cannot exceed 5 characters")
+    @Pattern(regexp = "^[0-9]{5}$", message = "Zip code must be exactly 5 digits")
     private String zipCode;
 
-    @NotBlank(message = "Owner cannot be blank")
+    @NotNull(message = "Owner cannot be blank")
     private Long ownerId;
 }
