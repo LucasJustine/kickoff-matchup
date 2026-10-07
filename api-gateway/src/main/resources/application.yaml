@@ -1,26 +1,39 @@
 server:
-  port : 8080
+  port: 8081
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      cookie:
+        name: AUTH_SESSION_ID
+        http-only: true
+        same-site: lax
 
 spring:
-    application:
-      name : api-gateway
-    cloud:
-      gateway:
-        routes:
-          - id: user-service
-            uri: http://localhost:8081
-            predicates:
-            - Path=/users/**
-    security:
-      oauth2:
-        client:
-          registration:
-            mon-auth-server:
-              provider: spring-auth-server
-              client-id: api-gateway
-              client-secret: secret123
-              authorization-grant-type: authorization_code
-              scope: openid, profile
-          provider:
-            spring-auth-server:
-              issuer-uri: http://localhost:9000
+  application:
+    name: api-gateway
+  session:
+    store-type: redis
+    redis:
+      namespace: "kickoffmatchup:session"
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:9000/oauth2/jwks
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+            - id: team-service
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/teams,/api/teams/**
+            - id: auth-server
+              uri: http://localhost:9000
+              predicates:
+                - Path=/oauth2/**,/login/**,/auth/**,/providers
