@@ -1,14 +1,58 @@
+server:
+  port: 9000
+  servlet:
+    session:
+      cookie:
+        name: AUTH_SESSION_ID
+        http-only: true
+        same-site: lax
 spring:
-    application:
-      name: auth-server
+  application:
+    name: auth-server
+  session:
+    store-type: redis
+    redis:
+      namespace: "kickoffmatchup:session"
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/${DB_NAME:user_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${DB_USER:user-service-user}
+    password: ${DB_PASSWORD:user-service-password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
-    security:
-      oauth2:
-        client:
-          registration:
-            google:
-              client-id: ${GOOGLE_CLIENT_ID}
-              client-secret: ${GOOGLE_CLIENT_SECRET}
-              redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-              authorization-grant-type: authorization_code
-              client-name: Google
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:your-google-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            authorization-grant-type: authorization_code
+            client-name: Google
+            scope:
+              - openid
+              - profile
+              - email
+
+rsa:
+  private-key: ${RSA_PRIVATE_KEY_PATH:file:classpath:certs/private.pem}
+  public-key: ${RSA_PUBLIC_KEY_PATH:file:classpath:certs/public.pem}
+
+jwt:
+  expiration: ${JWT_EXPIRATION:3600000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+app:
+  cookie-secure: ${COOKIE_SECURE:false}
