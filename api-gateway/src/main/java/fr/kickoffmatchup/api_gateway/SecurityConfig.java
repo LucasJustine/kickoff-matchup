@@ -79,6 +79,11 @@ public class SecurityConfig {
     @Bean
     BearerTokenResolver sessionTokenResolver() {
         return request -> {
+            Object attributeToken = request.getAttribute(JwtHeaderInjectionFilter.ACCESS_TOKEN_ATTRIBUTE);
+            if (attributeToken instanceof String accessToken) {
+                return accessToken;
+            }
+
             var session = request.getSession(false);
             if (session == null) {
                 return null;

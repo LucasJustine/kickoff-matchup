@@ -1,42 +1,61 @@
 package fr.kickoffmatchup.api_gateway.jwt;
 
+import com.nimbusds.jwt.SignedJWT;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtValidationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.session.Session;
 import org.springframework.session.data.redis.RedisSessionRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
+import java.text.ParseException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Component
 public class JwtHeaderInjectionFilter extends OncePerRequestFilter {
 
-    private final JwtDecoder jwtDecoder;
+    public static final String ACCESS_TOKEN_ATTRIBUTE =
+            JwtHeaderInjectionFilter.class.getName() + ".ACCESS_TOKEN";
+
+    private static final Logger log = LoggerFactory.getLogger(JwtHeaderInjectionFilter.class);
+    private static final String SESSION_ACCESS_TOKEN = "ACCESS_TOKEN";
+
+    /** On renouvelle un peu avant l'expiration pour ne pas expirer entre la gateway et le service aval. */
+    private static final Duration REFRESH_MARGIN = Duration.ofSeconds(30);
+
+    private static final int LOCK_STRIPES = 64;
+
     private final RedisSessionRepository sessionRepository;
     private final RestClient authServerClient;
 
+ 
+    private final ReentrantLock[] locks = new ReentrantLock[LOCK_STRIPES];
+
     public JwtHeaderInjectionFilter(
-            JwtDecoder jwtDecoder,
             RedisSessionRepository sessionRepository,
             RestClient.Builder restClientBuilder,
             @Value("${auth-server.url:http://localhost:9000}") String authServerUrl) {
-        this.jwtDecoder = jwtDecoder;
         this.sessionRepository = sessionRepository;
         this.authServerClient = restClientBuilder.baseUrl(authServerUrl).build();
+        for (int i = 0; i < LOCK_STRIPES; i++) {
+            locks[i] = new ReentrantLock();
+        }
     }
 
     @Override
@@ -44,23 +63,32 @@ public class JwtHeaderInjectionFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String token = extractTokenFromSession(request);
-        if (token != null && isExpired(token)) {
-            if (!refreshToken(request)) {
-                response.sendError(HttpStatus.UNAUTHORIZED.value(), "Session expiree");
-                return;
+
+        if (token != null) {
+            Instant expiresAt = expiresAt(token);
+            Instant now = Instant.now();
+
+            if (expiresAt != null && expiresAt.isBefore(now.plus(REFRESH_MARGIN))) {
+                String renewed = renew(request, token);
+                if (renewed != null) {
+                    token = renewed;
+                } else if (expiresAt.isBefore(now)) {
+                    response.sendError(HttpStatus.UNAUTHORIZED.value(), "Session expiree");
+                    return;
+                }
             }
-            token = extractTokenFromRedis(request);
         }
 
         final String resolvedToken = token;
 
-        if (request.getRequestURI().startsWith("/api/")
-                && resolvedToken == null) {
+        if (request.getRequestURI().startsWith("/api/") && resolvedToken == null) {
             response.sendError(HttpStatus.UNAUTHORIZED.value(), "Session non authentifiee");
             return;
         }
 
         if (resolvedToken != null) {
+            request.setAttribute(ACCESS_TOKEN_ATTRIBUTE, resolvedToken);
+
             request = new HttpServletRequestWrapper(request) {
                 @Override
                 public String getHeader(String name) {
@@ -93,58 +121,83 @@ public class JwtHeaderInjectionFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private String extractTokenFromSession(HttpServletRequest request) {
-        if (request.getSession(false) != null) {
-            Object accessToken = request.getSession(false).getAttribute("ACCESS_TOKEN");
-            if (accessToken instanceof String token) {
-                return token;
-            }
-        }
-        return null;
-    }
 
-    private String extractTokenFromRedis(HttpServletRequest request) {
+    private String renew(HttpServletRequest request, String currentToken) {
         var servletSession = request.getSession(false);
         if (servletSession == null) {
             return null;
         }
+        String sessionId = servletSession.getId();
 
-        Session session = sessionRepository.findById(servletSession.getId());
-        if (session == null) {
-            return null;
-        }
-
-        Object accessToken = session.getAttribute("ACCESS_TOKEN");
-        return accessToken instanceof String token ? token : null;
-    }
-
-    private boolean isExpired(String token) {
+        ReentrantLock lock = locks[Math.floorMod(sessionId.hashCode(), LOCK_STRIPES)];
+        lock.lock();
         try {
-            jwtDecoder.decode(token);
-            return false;
-        } catch (JwtValidationException exception) {
-            return exception.getErrors().stream()
-                    .anyMatch(error -> "invalid_token".equals(error.getErrorCode())
-                            && error.getDescription() != null
-                            && error.getDescription().toLowerCase().contains("expired"));
+            String latest = readTokenFromRedis(sessionId);
+            if (isRenewed(latest, currentToken)) {
+                return latest;
+            }
+
+            callRefreshEndpoint(request);
+
+            latest = readTokenFromRedis(sessionId);
+            return isRenewed(latest, currentToken) ? latest : null;
+        } finally {
+            lock.unlock();
         }
     }
 
-    private boolean refreshToken(HttpServletRequest request) {
-        var session = request.getSession(false);
-        if (session == null || request.getHeader("Cookie") == null) {
-            return false;
+    private void callRefreshEndpoint(HttpServletRequest request) {
+        String cookie = request.getHeader("Cookie");
+        if (cookie == null) {
+            return;
         }
 
         try {
             authServerClient.post()
-                    .uri("/auth/refresh")
-                    .header("Cookie", request.getHeader("Cookie"))
-                    .retrieve()
-                    .toBodilessEntity();
-            return true;
-        } catch (RestClientResponseException exception) {
+                .uri("/auth/refresh")
+                .header("Cookie", cookie)
+                .retrieve()
+                .toBodilessEntity();
+        } catch (RestClientException exception) {
+            log.debug("Refresh du token impossible : {}", exception.getMessage());
+        }
+    }
+
+    private String extractTokenFromSession(HttpServletRequest request) {
+        var session = request.getSession(false);
+        if (session != null && session.getAttribute(SESSION_ACCESS_TOKEN) instanceof String token) {
+            return token;
+        }
+        return null;
+    }
+
+    private String readTokenFromRedis(String sessionId) {
+        Session session = sessionRepository.findById(sessionId);
+        if (session == null) {
+            return null;
+        }
+        return session.getAttribute(SESSION_ACCESS_TOKEN) instanceof String token ? token : null;
+    }
+
+    private boolean isRenewed(String candidate, String currentToken) {
+        if (candidate == null || candidate.equals(currentToken)) {
             return false;
+        }
+        Instant expiresAt = expiresAt(candidate);
+        return expiresAt != null && expiresAt.isAfter(Instant.now());
+    }
+
+    /**
+     * Date d'expiration lue dans le JWT, sans valider la signature (le token vient de notre
+     * propre session ; la validation reste faite par le resource server). Null si illisible :
+     * on ne tente alors pas de refresh et le resource server rejettera le token.
+     */
+    private Instant expiresAt(String token) {
+        try {
+            Date expiration = SignedJWT.parse(token).getJWTClaimsSet().getExpirationTime();
+            return expiration == null ? null : expiration.toInstant();
+        } catch (ParseException exception) {
+            return null;
         }
     }
 }
