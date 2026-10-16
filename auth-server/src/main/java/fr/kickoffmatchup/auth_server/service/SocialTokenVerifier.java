@@ -43,6 +43,7 @@ public class SocialTokenVerifier {
         }
         Jwt jwt;
         try {
+            
             jwt = google.decode(idToken);
         } catch (BadJwtException e) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "INVALID_SOCIAL_TOKEN");

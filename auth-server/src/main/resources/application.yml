@@ -4,10 +4,6 @@ server:
 spring:
   application:
     name: auth-server
-  
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
 
   session:
     store-type: redis
@@ -27,7 +23,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
@@ -55,7 +51,7 @@ app:
     
   social:
     google:
-      client-ids: ${GOOGLE_CLIENT_IDS:} # Client IDs autorisés comme audience des ID tokens Google
+      client-ids: ${GOOGLE_CLIENT_IDS} # Client IDs autorisés comme audience des ID tokens Google
       
   jwt:
     issuer: ${JWT_ISSUER:https://auth.kickoffmatchup.fr}
@@ -65,3 +61,6 @@ app:
     refresh-reuse-leeway-seconds: 10
     private-key-location: ${JWT_PRIVATE_KEY_LOCATION:}
     public-key-location: ${JWT_PUBLIC_KEY_LOCATION:}
+
+springdoc:
+  default-produces-media-type: application/json
