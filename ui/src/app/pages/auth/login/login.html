@@ -1,0 +1,45 @@
+<h2>Connexion</h2>
+
+<div class="max-w-sm">
+  @if (error()) {
+    <nz-alert nzType="error" nzShowIcon [nzMessage]="error()" />
+  }
+  @if (emailNotVerified()) {
+    <p><a routerLink="/resend-verification">Renvoyer l'email de confirmation</a></p>
+  }
+
+  @if (!challengeId()) {
+    <form nz-form nzLayout="vertical" [formGroup]="form" (ngSubmit)="submit()">
+      <nz-form-item>
+        <nz-form-label nzFor="email">Email</nz-form-label>
+        <nz-form-control [nzErrorTip]="fieldError(form.controls.email)">
+          <input nz-input id="email" type="email" formControlName="email" autocomplete="username" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzFor="password">Mot de passe</nz-form-label>
+        <nz-form-control [nzErrorTip]="fieldError(form.controls.password)">
+          <input nz-input id="password" type="password" formControlName="password" autocomplete="current-password" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <button nz-button nzType="primary" nzBlock type="submit" [nzLoading]="loading()">Se connecter</button>
+    </form>
+
+    <p><a routerLink="/forgot-password">Mot de passe oublié ?</a></p>
+    <p>Pas encore de compte ? <a routerLink="/register">Créer un compte</a></p>
+  } @else {
+    <p>Un code à 6 chiffres vient de vous être envoyé par email (valable 5 minutes).</p>
+    <form nz-form nzLayout="vertical" [formGroup]="mfaForm" (ngSubmit)="submitMfa()">
+      <nz-form-item>
+        <nz-form-label nzFor="code">Code</nz-form-label>
+        <nz-form-control [nzErrorTip]="fieldError(mfaForm.controls.code)">
+          <input nz-input id="code" inputmode="numeric" maxlength="6" formControlName="code" autocomplete="one-time-code" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <button nz-button nzType="primary" nzBlock type="submit" [nzLoading]="loading()">Valider</button>
+    </form>
+  }
+</div>

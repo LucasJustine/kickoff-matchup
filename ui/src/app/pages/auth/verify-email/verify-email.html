@@ -1,0 +1,17 @@
+<h2>Confirmation de l'email</h2>
+
+<div class="max-w-sm">
+  @switch (status()) {
+    @case ('loading') {
+      <p>Vérification en cours…</p>
+    }
+    @case ('ok') {
+      <nz-alert nzType="success" nzShowIcon nzMessage="Email confirmé, votre compte est actif." />
+      <p><a routerLink="/login">Se connecter</a></p>
+    }
+    @case ('error') {
+      <nz-alert nzType="error" nzShowIcon [nzMessage]="error()" />
+      <p><a routerLink="/resend-verification">Recevoir un nouveau lien</a></p>
+    }
+  }
+</div>

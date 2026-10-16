@@ -1,0 +1,23 @@
+<h2>{{ texts.title }}</h2>
+
+<div class="max-w-sm">
+  @if (sent()) {
+    <nz-alert nzType="success" nzShowIcon [nzMessage]="texts.done" />
+  } @else {
+    <p>{{ texts.hint }}</p>
+    @if (error()) {
+      <nz-alert nzType="error" nzShowIcon [nzMessage]="error()" />
+    }
+    <form nz-form nzLayout="vertical" [formGroup]="form" (ngSubmit)="submit()">
+      <nz-form-item>
+        <nz-form-label nzFor="email">Email</nz-form-label>
+        <nz-form-control [nzErrorTip]="fieldError(form.controls.email)">
+          <input nz-input id="email" type="email" formControlName="email" autocomplete="email" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <button nz-button nzType="primary" nzBlock type="submit" [nzLoading]="loading()">{{ texts.button }}</button>
+    </form>
+  }
+  <p><a routerLink="/login">Retour à la connexion</a></p>
+</div>
