@@ -8,11 +8,9 @@
  * Do not edit the class manually.
  */
 import { UserDto } from './userDto';
-import { TokenPair } from './tokenPair';
 
 
 export interface AuthResult { 
     user?: UserDto;
-    tokens?: TokenPair;
 }
 

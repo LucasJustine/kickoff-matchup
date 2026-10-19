@@ -4,7 +4,6 @@ api.base.service.ts
 api.module.ts
 api/api.ts
 api/authController.service.ts
-api/jwksController.service.ts
 configuration.ts
 encoder.ts
 git_push.sh
@@ -19,7 +18,6 @@ model/models.ts
 model/refreshRequest.ts
 model/registerRequest.ts
 model/resetPasswordRequest.ts
-model/socialLoginRequest.ts
 model/tokenPair.ts
 model/tokenRequest.ts
 model/userDto.ts

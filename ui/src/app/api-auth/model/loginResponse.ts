@@ -8,13 +8,11 @@
  * Do not edit the class manually.
  */
 import { UserDto } from './userDto';
-import { TokenPair } from './tokenPair';
 
 
 export interface LoginResponse { 
     status?: LoginResponse.StatusEnum;
     user?: UserDto;
-    tokens?: TokenPair;
     challengeId?: string;
 }
 export namespace LoginResponse {

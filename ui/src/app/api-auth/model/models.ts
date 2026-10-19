@@ -7,7 +7,6 @@ export * from './mfaVerifyRequest';
 export * from './refreshRequest';
 export * from './registerRequest';
 export * from './resetPasswordRequest';
-export * from './socialLoginRequest';
 export * from './tokenPair';
 export * from './tokenRequest';
 export * from './userDto';
