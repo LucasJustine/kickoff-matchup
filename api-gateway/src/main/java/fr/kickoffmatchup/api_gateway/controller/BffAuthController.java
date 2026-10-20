@@ -1,6 +1,5 @@
 package fr.kickoffmatchup.api_gateway.controller;
 
-import fr.kickoffmatchup.api_gateway.security.SecurityConstants;
 import fr.kickoffmatchup.api_gateway.utils.Session;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -8,6 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpClientErrorException.Unauthorized;
 import org.springframework.web.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,31 +30,42 @@ public class BffAuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, Object> loginPayload, HttpServletRequest request) {
-        LoginResponse response = authServerClient.post()
-                .uri("/auth/login")
-                .body(loginPayload)
-                .retrieve()
-                .body(LoginResponse.class);
+        try {
+            LoginResponse response = authServerClient.post()
+                    .uri("/auth/login")
+                    .body(loginPayload)
+                    .retrieve()
+                    .body(LoginResponse.class);
 
-        if (response == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+            if (response == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
 
-        if ("MFA_REQUIRED".equals(response.status())) {
+            if ("MFA_REQUIRED".equals(response.status())) {
+                return ResponseEntity.ok(Map.of(
+                        "status", "MFA_REQUIRED",
+                        "challengeId", response.challengeId() != null ? response.challengeId() : ""));
+            }
+
+            if (response.tokens() != null) {
+                Session.storeTokensInSession(request, response.tokens().accessToken(),
+                        response.tokens().refreshToken());
+            }
+
             return ResponseEntity.ok(Map.of(
-                    "status", "MFA_REQUIRED",
-                    "challengeId", response.challengeId() != null ? response.challengeId() : ""
-            ));
-        }
+                    "status", "OK",
+                    "user", response.user() != null ? response.user() : Map.of()));
 
-        if (response.tokens() != null) {
-            Session.storeTokensInSession(request, response.tokens().accessToken(), response.tokens().refreshToken());
+        } catch (Unauthorized e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of(
+                            "success", false,
+                            "code", "INVALID_CREDENTIALS",
+                            "message", "Email ou mot de passe incorrect."));
+        } catch (HttpClientErrorException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(e.getResponseBodyAsString());
         }
-
-        return ResponseEntity.ok(Map.of(
-                "status", "OK",
-                "user", response.user() != null ? response.user() : Map.of()
-        ));
     }
 
     @PostMapping("/mfa/verify")
@@ -74,10 +86,8 @@ public class BffAuthController {
 
         return ResponseEntity.ok(Map.of(
                 "status", "OK",
-                "user", result.user() != null ? result.user() : Map.of()
-        ));
+                "user", result.user() != null ? result.user() : Map.of()));
     }
-
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request) {
@@ -108,11 +118,18 @@ public class BffAuthController {
         return ResponseEntity.noContent().build();
     }
 
+    private record RefreshRequest(String refreshToken) {
+    }
 
+    private record UserDto(Long id, String email, String firstName, String lastName, boolean mfaEnabled) {
+    }
 
-    private record RefreshRequest(String refreshToken) {}
-    private record UserDto(Long id, String email, String firstName, String lastName, boolean mfaEnabled) {}
-    private record TokenPair(String accessToken, String refreshToken, String tokenType, long expiresIn) {}
-    private record AuthResult(UserDto user, TokenPair tokens) {}
-    private record LoginResponse(String status, UserDto user, TokenPair tokens, String challengeId) {}
+    private record TokenPair(String accessToken, String refreshToken, String tokenType, long expiresIn) {
+    }
+
+    private record AuthResult(UserDto user, TokenPair tokens) {
+    }
+
+    private record LoginResponse(String status, UserDto user, TokenPair tokens, String challengeId) {
+    }
 }
