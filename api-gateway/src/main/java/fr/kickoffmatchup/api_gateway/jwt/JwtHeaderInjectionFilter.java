@@ -1,6 +1,7 @@
 package fr.kickoffmatchup.api_gateway.jwt;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nimbusds.jwt.SignedJWT;
 
 import fr.kickoffmatchup.api_gateway.security.SecurityConstants;
@@ -13,7 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.session.Session;
+import org.springframework.session.data.redis.RedisSessionRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -33,7 +38,9 @@ public class JwtHeaderInjectionFilter extends OncePerRequestFilter {
 
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    private record GatewayTokenPair(String accessToken) {}
+    private record GatewayTokenPair(String accessToken, String refreshToken) {}
+
+    private record RefreshRequest(String refreshToken) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     private record GatewayAuthResult(GatewayTokenPair tokens) {}
@@ -45,14 +52,17 @@ public class JwtHeaderInjectionFilter extends OncePerRequestFilter {
 
     private static final int LOCK_STRIPES = 64;
 
+    private final RedisSessionRepository sessionRepository;
     private final RestClient authServerClient;
 
  
     private final ReentrantLock[] locks = new ReentrantLock[LOCK_STRIPES];
 
     public JwtHeaderInjectionFilter(
+            RedisSessionRepository sessionRepository,
             RestClient.Builder restClientBuilder,
             @Value("${auth-server.url:http://localhost:9000}") String authServerUrl) {
+        this.sessionRepository = sessionRepository;
         this.authServerClient = restClientBuilder.baseUrl(authServerUrl).build();
         for (int i = 0; i < LOCK_STRIPES; i++) {
             locks[i] = new ReentrantLock();
@@ -68,14 +78,16 @@ public class JwtHeaderInjectionFilter extends OncePerRequestFilter {
         if (token != null) {
             Instant expiresAt = expiresAt(token);
             Instant now = Instant.now();
-
+            System.out.println("Expires at: " + expiresAt);
+            System.out.println("Now: " + now);
             if (expiresAt != null && expiresAt.isBefore(now.plus(REFRESH_MARGIN))) {
                 String renewed = renew(request, token);
                 if (renewed != null) {
                     token = renewed;
                 } else if (expiresAt.isBefore(now)) {
-                    response.sendError(HttpStatus.UNAUTHORIZED.value(), "Session expiree");
-                    return;
+                    // Expiré et non renouvelable : pas de Bearer. La chaîne de sécurité tranche (401 sur une route
+                    // protégée) ; une route publique (login, providers…) reste utilisable pour se reconnecter.
+                    token = null;
                 }
             }
         }
@@ -123,7 +135,7 @@ public class JwtHeaderInjectionFilter extends OncePerRequestFilter {
     }
 
 
-  private String renew(HttpServletRequest request, String currentToken) {
+    private String renew(HttpServletRequest request, String currentToken) {
         var servletSession = request.getSession(false);
         if (servletSession == null) {
             return null;
@@ -138,40 +150,45 @@ public class JwtHeaderInjectionFilter extends OncePerRequestFilter {
                 return latest;
             }
 
-            String newToken = callRefreshEndpoint(request);
-
-            if (newToken != null) {
-                servletSession.setAttribute(SecurityConstants.SESSION_ACCESS_TOKEN, newToken);
-                return newToken;
+            if (!(servletSession.getAttribute(SecurityConstants.SESSION_REFRESH_TOKEN) instanceof String refreshToken)) {
+                return null;
             }
 
-            return null;
+            try {
+                GatewayTokenPair pair = callRefreshEndpoint(refreshToken);
+                if (pair == null || pair.accessToken() == null) {
+                    return null;
+                }
+                servletSession.setAttribute(SecurityConstants.SESSION_ACCESS_TOKEN, pair.accessToken());
+                // Le refresh token tourne : on garde le nouveau, sinon le prochain refresh rejouerait l'ancien.
+                if (pair.refreshToken() != null) {
+                    servletSession.setAttribute(SecurityConstants.SESSION_REFRESH_TOKEN, pair.refreshToken());
+                }
+                return pair.accessToken();
+
+            } catch (HttpClientErrorException exception) {
+                log.warn("Refresh refusé par l'auth server : HTTP {} {}",
+                        exception.getStatusCode().value(), exception.getResponseBodyAsString());
+                servletSession.removeAttribute(SecurityConstants.SESSION_ACCESS_TOKEN);
+                servletSession.removeAttribute(SecurityConstants.SESSION_REFRESH_TOKEN);
+                return null;
+            } catch (RestClientException exception) {
+                log.warn("Refresh du token impossible : {}", exception.getMessage());
+                return null;
+            }
         } finally {
             lock.unlock();
         }
     }
 
-    private String callRefreshEndpoint(HttpServletRequest request) {
-        String cookie = request.getHeader("Cookie");
-        if (cookie == null) {
-            return null;
-        }
-
-        try {
-            GatewayAuthResult responseBody = authServerClient.post()
+    private GatewayTokenPair callRefreshEndpoint(String refreshToken) {
+        GatewayAuthResult body = authServerClient.post()
                 .uri("/auth/refresh")
-                .header("Cookie", cookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new RefreshRequest(refreshToken))
                 .retrieve()
                 .body(GatewayAuthResult.class);
-
-            return (responseBody != null && responseBody.tokens() != null) 
-                    ? responseBody.tokens().accessToken() 
-                    : null;
-
-        } catch (RestClientException exception) {
-            log.debug("Refresh du token impossible : {}", exception.getMessage());
-            return null;
-        }
+        return body == null ? null : body.tokens();
     }
 
 

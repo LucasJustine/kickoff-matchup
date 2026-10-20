@@ -6,12 +6,16 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.AntPathMatcher;
 import fr.kickoffmatchup.api_gateway.jwt.JwtHeaderInjectionFilter;
+import fr.kickoffmatchup.api_gateway.config.ReturnUrlCaptureFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,10 +37,32 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final JwtHeaderInjectionFilter jwtHeaderInjectionFilter;
 
-    public SecurityConfig(JwtHeaderInjectionFilter jwtHeaderInjectionFilter) {
+    private static final String[] PUBLIC_PATHS = {
+            "/bff/providers/**",
+            "/error",
+            "/favicon.ico",
+            "/assets/**",
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/public/**"
+    };
+
+    private static final String[] ANONYMOUS_PATHS = {
+            "/bff/auth/**",
+            "/oauth2/**",
+            "/login/oauth2/code/**",
+
+    };
+    private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
+
+    private final JwtHeaderInjectionFilter jwtHeaderInjectionFilter;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+
+    public SecurityConfig(JwtHeaderInjectionFilter jwtHeaderInjectionFilter,
+            OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler) {
         this.jwtHeaderInjectionFilter = jwtHeaderInjectionFilter;
+        this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
     }
 
     @Bean
@@ -50,26 +76,28 @@ public class SecurityConfig {
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(requestHandler))
                 .logout(logout -> logout.disable())
+                // Avec oauth2Login : sans ça, l'utilisateur OAuth2 serait gardé dans la session Redis et
+                // authentifierait les requêtes suivantes sans token valide. Seul le JWT fait foi.
+                .securityContext(securityContext -> securityContext
+                        .securityContextRepository(new RequestAttributeSecurityContextRepository()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/bff/auth/**",
-                                "/oauth2/**",
-                                "/login/oauth2/code/**",
-                                "/error",
-                                "/favicon.ico",
-                                "/assets/**",
-                                "/bff/providers/**")
-                        .permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/public/**").permitAll()
+                        .requestMatchers(ANONYMOUS_PATHS).anonymous()
+                        .requestMatchers(PUBLIC_PATHS).permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .bearerTokenResolver(sessionTokenResolver())
                         .jwt(Customizer.withDefaults()))
+                .oauth2Login(oauth2 -> oauth2
+                    .successHandler(oAuth2LoginSuccessHandler)
+                    .failureHandler(oAuth2LoginSuccessHandler))
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(
                                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .addFilterBefore(
                         jwtHeaderInjectionFilter,
                         BearerTokenAuthenticationFilter.class)
+                // Garde ?returnUrl=... en session au démarrage du flux OAuth
+                .addFilterBefore(new ReturnUrlCaptureFilter(), OAuth2AuthorizationRequestRedirectFilter.class)
                 .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class);
 
         return http.build();
@@ -78,6 +106,14 @@ public class SecurityConfig {
     @Bean
     BearerTokenResolver sessionTokenResolver() {
         return request -> {
+            // Routes publiques : on ne valide pas le token de session (il peut être périmé).
+            // JwtHeaderInjectionFilter l'ajoute quand même aux requêtes relayées (ex. /bff/auth/me).
+            String path = request.getRequestURI();
+            for (String publicPath : PUBLIC_PATHS) {
+                if (PATH_MATCHER.match(publicPath, path)) {
+                    return null;
+                }
+            }
 
             var session = request.getSession(false);
             if (session == null) {
