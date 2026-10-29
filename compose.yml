@@ -1,0 +1,110 @@
+name: kickoff-matchup
+
+services:
+  frontend:
+    image: node:26-alpine
+    container_name: angular-dev
+    working_dir: /app
+    volumes:
+      - ./ui:/app
+      - /app/node_modules 
+    command: sh -c "npm install && npm run start -- --host 0.0.0.0 --poll 2000"
+
+  proxy:
+    image: nginx:alpine
+    container_name: nginx-proxy-dev
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx/nginx-dev.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+
+  kickoff-redis:
+    image: redis:7-alpine
+    container_name: kickoff-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  user-database:
+    image: mysql:latest                      # gardez la version qui a créé le volume (un volume MySQL ne se "rétrograde" pas)
+    container_name: user-database
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_DATABASE: ${USER_DB_NAME:-user_db}
+      MYSQL_USER: ${USER_DB_USER:-user-service-user}
+      MYSQL_PASSWORD: ${USER_DB_PASSWORD:-user-service-password}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3307:3306"
+    volumes:
+      - user-database-data:/var/lib/mysql  
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  team-database:
+    image: mysql:latest
+    container_name: team-database
+    environment:
+      MYSQL_ROOT_PASSWORD: ${TEAM_DB_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${TEAM_DB_NAME:-team_db}
+      MYSQL_USER: ${TEAM_DB_USER:-team}
+      MYSQL_PASSWORD: ${TEAM_DB_PASSWORD:-team}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3305:3306"
+    volumes:
+      - team-database-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  # Serveur mail de DÉVELOPPEMENT : il reçoit tous les mails sans en envoyer aucun.
+  # Interface web pour les lire : http://localhost:8025
+  kickoff-mail:
+    image: axllent/mailpit:latest
+    container_name: kickoff-mail
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"           # accepte n'importe quel login/mdp
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"       # authentification sans TLS autorisée (dev)
+      MP_DATABASE: /data/mailpit.db          # garde les mails après un redémarrage
+    ports:
+      - "1025:1025"                          # SMTP
+      - "8025:8025"                          # interface web
+    volumes:
+      - mailpit-data:/data
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+  team-database-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${VOLUMES_DIR:-/run/desktop/mnt/host/e/Projets/docker/volumes/kickoff-matchup}/team
+  mailpit-data:
+
+  user-database-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${VOLUMES_DIR:-/run/desktop/mnt/host/e/Projets/docker/volumes/kickoff-matchup}/user
