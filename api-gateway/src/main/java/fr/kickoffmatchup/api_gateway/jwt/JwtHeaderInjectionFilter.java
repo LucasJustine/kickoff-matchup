@@ -61,7 +61,7 @@ public class JwtHeaderInjectionFilter extends OncePerRequestFilter {
     public JwtHeaderInjectionFilter(
             RedisSessionRepository sessionRepository,
             RestClient.Builder restClientBuilder,
-            @Value("${auth-server.url:http://localhost:9000}") String authServerUrl) {
+            @Value("${app.auth-server-url}") String authServerUrl) {
         this.sessionRepository = sessionRepository;
         this.authServerClient = restClientBuilder.baseUrl(authServerUrl).build();
         for (int i = 0; i < LOCK_STRIPES; i++) {

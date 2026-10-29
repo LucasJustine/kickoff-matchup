@@ -24,7 +24,7 @@ public class BffAuthController {
 
     public BffAuthController(
             RestClient.Builder restClientBuilder,
-            @Value("${auth-server.url:http://localhost:9000}") String authServerUrl) {
+            @Value("${app.auth-server-url}") String authServerUrl) {
         this.authServerClient = restClientBuilder.baseUrl(authServerUrl).build();
     }
 

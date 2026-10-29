@@ -44,8 +44,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler, 
 
     public OAuth2LoginSuccessHandler(
             RestClient.Builder restClientBuilder,
-            @Value("${auth-server.url:http://localhost:9000}") String authServerUrl,
-            @Value("${app.frontend-url:http://localhost:4200}") String frontendUrl) {
+            @Value("${app.auth-server-url}") String authServerUrl,
+            @Value("${app.frontend-url}") String frontendUrl) {
         this.authServerClient = restClientBuilder.baseUrl(authServerUrl).build();
         this.frontendUrl = frontendUrl;
     }

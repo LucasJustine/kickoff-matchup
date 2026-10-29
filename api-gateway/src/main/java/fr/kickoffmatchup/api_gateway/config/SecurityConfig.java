@@ -48,7 +48,8 @@ public class SecurityConfig {
             "/assets/**",
             "/v3/api-docs/**",
             "/swagger-ui/**",
-            "/public/**"
+            "/public/**",
+            "/auth/mfa/resend"
     };
 
     private static final String[] ANONYMOUS_PATHS = {
@@ -56,6 +57,10 @@ public class SecurityConfig {
             "/bff/auth/mfa/verify",
             "/oauth2/**",
             "/login/oauth2/code/**",
+            "/bff/auth/register",
+            "/bff/auth/verify-email",
+            "/bff/auth/forgot-password",
+            "/bff/auth/reset-password"
 
     };
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
@@ -75,13 +80,14 @@ public class SecurityConfig {
         CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
         http
 
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .csrfTokenRequestHandler(requestHandler))
+                        .csrfTokenRequestHandler(requestHandler)
+                        .ignoringRequestMatchers("/auth/login", "/auth/register",
+                            "/auth/verify-email", "/auth/forgot-password",
+                            "/auth/reset-password", "/auth/mfa/**"))
                 .logout(logout -> logout.disable())
-                // Avec oauth2Login : sans ça, l'utilisateur OAuth2 serait gardé dans la session Redis et
-                // authentifierait les requêtes suivantes sans token valide. Seul le JWT fait foi.
                 .securityContext(securityContext -> securityContext
                         .securityContextRepository(new RequestAttributeSecurityContextRepository()))
                 .authorizeHttpRequests(auth -> auth
@@ -127,18 +133,18 @@ public class SecurityConfig {
         };
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:4200"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
+    // @Bean
+    // public CorsConfigurationSource corsConfigurationSource() {
+    //     CorsConfiguration configuration = new CorsConfiguration();
+    //     configuration.setAllowedOrigins(List.of("http://localhost:4200"));
+    //     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    //     configuration.setAllowedHeaders(List.of("*"));
+    //     configuration.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
+    //     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    //     source.registerCorsConfiguration("/**", configuration);
+    //     return source;
+    // }
 
     private static final class CsrfCookieFilter extends OncePerRequestFilter {
         @Override
