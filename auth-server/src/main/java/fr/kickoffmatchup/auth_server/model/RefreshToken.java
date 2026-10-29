@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
 public class RefreshToken {
     @Id
@@ -44,4 +43,17 @@ public class RefreshToken {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    public RefreshToken(Long id, String tokenHash, User user, String familyId,
+                        Instant expiresAt, Instant revokedAt, boolean rotated,
+                        LocalDateTime createdAt) {
+        this.id = id;
+        this.tokenHash = tokenHash;
+        this.user = user;
+        this.familyId = familyId;
+        this.expiresAt = expiresAt;
+        this.revokedAt = revokedAt;
+        this.rotated = rotated;
+        this.createdAt = createdAt;
+    }
 }

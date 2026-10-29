@@ -50,6 +50,16 @@ public class EmailService {
                 + "Si vous n'êtes pas à l'origine de cette connexion, changez votre mot de passe.");
     }
 
+    @Async
+    public void sendAccountAlreadyExists(String to, String firstName) {
+        send(to, "Vous avez déjà un compte",
+                "Bonjour " + firstName + ",\n\n"
+                + "Quelqu'un vient d'essayer de créer un compte avec cette adresse, qui en a déjà un.\n"
+                + "Connectez-vous normalement (avec Google si c'est ce que vous utilisez), ou utilisez "
+                + "« Mot de passe oublié » pour définir un mot de passe.\n\n"
+                + "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.");
+    }
+
     private void send(String to, String subject, String text) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();

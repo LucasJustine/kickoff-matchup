@@ -10,10 +10,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
-/**
- * Le champ "provider" a disparu : les comptes sociaux liés sont dans {@link UserIdentity}.
- * Un même utilisateur peut donc avoir un mot de passe + Google + Apple.
- */
+
 @Entity
 @Table(name = "Users")
 @Data

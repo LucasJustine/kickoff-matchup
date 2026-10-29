@@ -58,6 +58,7 @@ public class AuthService {
             user.setLastName(lastName);
             users.save(user);
         } else {
+            emails.sendAccountAlreadyExists(existing.get().getEmail(), existing.get().getFirstName());
             return;
         }
         emails.sendVerification(user.getEmail(), user.getFirstName(),
