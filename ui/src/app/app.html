@@ -7,9 +7,9 @@
       </a>
     </div>
     <ul nz-menu class="top-nav" nzTheme="dark" nzMode="horizontal">
-      <li nz-menu-item routerLinkActive="ant-menu-item-selected" routerLink="/welcome">Home</li>
-      <li nz-menu-item routerLinkActive="ant-menu-item-selected" routerLink="/login">Login</li>
-      <li nz-menu-item>Profile</li>
+        <li nz-menu-item nzMatchRouter routerLink="/welcome">Home</li>
+        <li nz-menu-item nzMatchRouter routerLink="/auth/login">Login</li>
+        <li nz-menu-item nzMatchRouter routerLink="/profile">Profile</li>
     </ul>
   </nz-header>
   <nz-content>

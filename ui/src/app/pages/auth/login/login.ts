@@ -1,23 +1,34 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormGroup, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { AuthControllerService, LoginResponse } from '../../../api-auth';
 import { fieldError, handleApiError, toApiError } from '../../../api-auth/auth-shared';
+import { ProvidersService } from '../../../services/providers.service';
+import { DEFAULT_URL, sanitizeReturnUrl } from '../../../utils/sanitize';
+import { SessionService } from '../../../services/session.service';
+import { SocialLoginButton } from '../../../components/providers-button/social-login-button';
 
 @Component({
     selector: 'app-login',
-    imports: [ReactiveFormsModule, RouterLink, NzAlertModule, NzButtonModule, NzFormModule, NzInputModule],
+    imports: [ReactiveFormsModule, RouterLink, NzAlertModule, NzButtonModule, NzFormModule, NzInputModule, SocialLoginButton],
     templateUrl: './login.html',
 })
-export class Login {
+export class Login implements OnInit {
     private readonly fb = inject(NonNullableFormBuilder);
     private readonly api = inject(AuthControllerService);
     private readonly router = inject(Router);
+    private readonly route = inject(ActivatedRoute);
+    private readonly session = inject(SessionService);
+    private readonly providersService = inject(ProvidersService);
 
+    /** Page demandée avant d'être renvoyé ici (?returnUrl=/mon-espace), ou null. */
+    private readonly returnUrl = sanitizeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'));
+
+    protected readonly providers = this.providersService.providers;
     protected readonly fieldError = fieldError;
     protected readonly loading = signal(false);
     protected readonly error = signal('');
@@ -33,6 +44,22 @@ export class Login {
     protected readonly mfaForm = this.fb.group({
         code: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
     });
+
+    ngOnInit(): void {
+        this.providersService.loadProviders();
+
+        // Erreur renvoyée par le gateway après un échec de connexion sociale (/login?error=CODE)
+        const errorCode = this.route.snapshot.queryParamMap.get('error');
+        if (errorCode) this.error.set(handleApiError(this.form, { code: errorCode }));
+    }
+
+    /** Redirection pleine page vers le gateway ; il ramène sur returnUrl après la connexion. */
+    protected loginWithProvider(provider: { loginUrl: string }): void {
+        const url = this.returnUrl
+            ? `${provider.loginUrl}?returnUrl=${encodeURIComponent(this.returnUrl)}`
+            : provider.loginUrl;
+        window.location.assign(url);
+    }
 
     submit(): void {
         if (this.form.invalid) return this.form.markAllAsTouched();
@@ -54,9 +81,7 @@ export class Login {
         if (this.mfaForm.invalid) return this.mfaForm.markAllAsTouched();
         this.begin();
         this.api
-            .verifyMfa(
-                { challengeId: this.challengeId()!, code: this.mfaForm.getRawValue().code }
-            )
+            .verifyMfa({ challengeId: this.challengeId()!, code: this.mfaForm.getRawValue().code })
             .subscribe({
                 next: () => this.success(),
                 error: (e) => {
@@ -83,9 +108,10 @@ export class Login {
         this.error.set(handleApiError(form, e));
     }
 
+    /** La session est posée par le gateway (cookie) : on retourne là où l'utilisateur voulait aller. */
     private success(): void {
         this.loading.set(false);
-        // TODO: stocker res.tokens.accessToken (service de session) avant de naviguer.
-        this.router.navigateByUrl('/welcome');
+        this.session.markAuthenticated();
+        this.router.navigateByUrl(this.returnUrl ?? DEFAULT_URL);
     }
 }

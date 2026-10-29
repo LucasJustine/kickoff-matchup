@@ -1,0 +1,29 @@
+<h2>Mon profil</h2>
+
+<div class="max-w-sm">
+  @if (error()) {
+    <nz-alert nzType="error" nzShowIcon [nzMessage]="error()" />
+  }
+
+  @if (user(); as u) {
+    <nz-descriptions nzBordered [nzColumn]="1">
+      <nz-descriptions-item nzTitle="Prénom">{{ u.firstName }}</nz-descriptions-item>
+      <nz-descriptions-item nzTitle="Nom">{{ u.lastName }}</nz-descriptions-item>
+      <nz-descriptions-item nzTitle="Email">{{ u.email }}</nz-descriptions-item>
+      <nz-descriptions-item nzTitle="Double authentification (code par email)">
+        {{ u.mfaEnabled ? 'Activée' : 'Désactivée' }}
+      </nz-descriptions-item>
+    </nz-descriptions>
+
+    <p>
+      <button nz-button type="button" [nzLoading]="savingMfa()" (click)="toggleMfa(!u.mfaEnabled)">
+        {{ u.mfaEnabled ? 'Désactiver' : 'Activer' }} la double authentification
+      </button>
+    </p>
+    <p>
+      <button nz-button nzDanger type="button" [nzLoading]="loggingOut()" (click)="logout()">Se déconnecter</button>
+    </p>
+  } @else if (loading()) {
+    <p>Chargement…</p>
+  }
+</div>

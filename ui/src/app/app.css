@@ -2,9 +2,6 @@
   display: flex;
 }
 
-.app-layout {
-  height: 100vh;
-}
 
 .top-nav {
   line-height: 64px;
@@ -47,5 +44,4 @@ nz-content {
 .inner-content {
   padding: 24px;
   background: #fff;
-  height: 100%;
 }

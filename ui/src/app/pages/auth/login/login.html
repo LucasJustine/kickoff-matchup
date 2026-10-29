@@ -8,7 +8,13 @@
     <p><a routerLink="/resend-verification">Renvoyer l'email de confirmation</a></p>
   }
 
+  
+
   @if (!challengeId()) {
+    @for (provider of providers(); track provider.id) {
+      <social-login-button [provider]="provider" (signIn)="loginWithProvider(provider)" />
+    }
+    
     <form nz-form nzLayout="vertical" [formGroup]="form" (ngSubmit)="submit()">
       <nz-form-item>
         <nz-form-label nzFor="email">Email</nz-form-label>
@@ -28,8 +34,9 @@
     </form>
 
     <p><a routerLink="/forgot-password">Mot de passe oublié ?</a></p>
-    <p>Pas encore de compte ? <a routerLink="/register">Créer un compte</a></p>
+    <p>Pas encore de compte ? <a routerLink="/auth/register" queryParamsHandling="preserve">Créer un compte</a></p>
   } @else {
+   
     <p>Un code à 6 chiffres vient de vous être envoyé par email (valable 5 minutes).</p>
     <form nz-form nzLayout="vertical" [formGroup]="mfaForm" (ngSubmit)="submitMfa()">
       <nz-form-item>

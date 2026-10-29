@@ -1,8 +1,6 @@
 import {
     ApplicationConfig,
     provideBrowserGlobalErrorListeners,
-    provideAppInitializer,
-    inject,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
@@ -10,8 +8,6 @@ import {
     provideHttpClient,
     withXsrfConfiguration,
     withInterceptors,
-    HttpErrorResponse,
-    HttpInterceptorFn,
 } from '@angular/common/http';
 import { environment } from '../environments/environment';
 import { forkJoin, catchError, throwError, switchMap, from } from 'rxjs';
@@ -20,31 +16,20 @@ import { registerLocaleData } from '@angular/common';
 import fr from '@angular/common/locales/fr';
 import { provideNzDateFnsAdapter } from 'ng-zorro-antd/core/time';
 import { provideApi } from './api-auth';
+import { unauthorizedInterceptor } from './interceptors/unauthorized.interceptor';
+import { errorInterceptor } from './interceptors/error.interceptor';
 
 registerLocaleData(fr);
-
-export const errorInterceptor: HttpInterceptorFn = (req, next) =>
-    next(req).pipe(
-        catchError((err: HttpErrorResponse) => {
-            if (err.status === 0) {
-                return throwError(() => ({ success: false, message: 'Serveur injoignable'}));
-            }
-
-           
-
-            return throwError(() => err);
-        }),
-    );
 
 export const appConfig: ApplicationConfig = {
     providers: [
         provideBrowserGlobalErrorListeners(),
         provideRouter(routes),
         provideHttpClient(
-            //   withXsrfConfiguration({
-            //     cookieName: 'XSRF-TOKEN',
-            //     headerName: 'X-XSRF-TOKEN',
-            //   }),
+              withXsrfConfiguration({
+                cookieName: 'XSRF-TOKEN',
+                headerName: 'X-XSRF-TOKEN',
+              }),
             withInterceptors([
                 //     (req, next) => {
                 //       const reqWithCreds = req.clone({
@@ -53,6 +38,7 @@ export const appConfig: ApplicationConfig = {
                 //       });
                 //       return next(reqWithCreds);
                 //     },
+                unauthorizedInterceptor,
                 errorInterceptor,
             ]),
         ),
