@@ -27,7 +27,7 @@ public final class AuthDtos {
             @NotBlank @Size(min = 8, max = 72) String newPassword) {}
 
 
-    public record MfaToggleRequest(boolean enabled) {}
+    public record MfaToggleRequest(boolean enabled, @Size(max = 72) String currentPassword) {}
 
 
 }

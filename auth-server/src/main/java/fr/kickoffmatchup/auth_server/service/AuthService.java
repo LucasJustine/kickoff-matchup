@@ -103,6 +103,20 @@ public class AuthService {
     }
 
     @Transactional
+    public User setMfa(User user, boolean enabled, String currentPassword) {
+        boolean hasPassword = user.getPassword() != null;
+        if (enabled && !hasPassword) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "PASSWORD_REQUIRED_FOR_MFA");
+        }
+        if (!enabled && user.isMfaEnabled() && hasPassword
+                && (currentPassword == null || !encoder.matches(currentPassword, user.getPassword()))) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "INVALID_CURRENT_PASSWORD");
+        }
+        user.setMfaEnabled(enabled);
+        return users.save(user);
+    }
+
+    @Transactional
     public void forgotPassword(String rawEmail) {
         users.findByEmail(normalize(rawEmail))
                 .ifPresent(u -> emails.sendPasswordReset(u.getEmail(), u.getFirstName(),
