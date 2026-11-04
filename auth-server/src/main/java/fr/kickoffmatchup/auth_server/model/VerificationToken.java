@@ -35,4 +35,8 @@ public class VerificationToken {
 
     @Column(name = "used_at")
     private Instant usedAt;
+
+    /** Hash du mot de passe choisi à l'inscription, appliqué au compte seulement une fois l'email vérifié. */
+    @Column(name = "pending_password_hash", length = 100)
+    private String pendingPasswordHash;
 }

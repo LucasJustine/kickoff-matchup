@@ -5,6 +5,7 @@ import fr.kickoffmatchup.auth_server.enums.TokenType;
 import fr.kickoffmatchup.auth_server.exception.ApiException;
 import fr.kickoffmatchup.auth_server.mail.EmailService;
 import fr.kickoffmatchup.auth_server.model.User;
+import fr.kickoffmatchup.auth_server.model.VerificationToken;
 import fr.kickoffmatchup.auth_server.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -50,24 +51,24 @@ public class AuthService {
         User user;
         if (existing.isEmpty()) {
             user = users.save(User.builder()
-                    .email(email).password(hash).firstName(firstName).lastName(lastName).build());
+                    .email(email).firstName(firstName).lastName(lastName).build());
         } else if (!existing.get().isEmailVerified()) {
             user = existing.get();
-            user.setPassword(hash);
-            user.setFirstName(firstName);
-            user.setLastName(lastName);
-            users.save(user);
         } else {
             emails.sendAccountAlreadyExists(existing.get().getEmail(), existing.get().getFirstName());
             return;
         }
         emails.sendVerification(user.getEmail(), user.getFirstName(),
-                tokens.create(user, TokenType.EMAIL_VERIFICATION, VERIFY_TTL));
+                tokens.create(user, TokenType.EMAIL_VERIFICATION, VERIFY_TTL, hash));
     }
 
     @Transactional
     public void verifyEmail(String token) {
-        User user = tokens.consume(token, TokenType.EMAIL_VERIFICATION);
+        VerificationToken verification = tokens.consumeToken(token, TokenType.EMAIL_VERIFICATION);
+        User user = verification.getUser();
+        if (verification.getPendingPasswordHash() != null) {
+            user.setPassword(verification.getPendingPasswordHash());
+        }
         user.setEmailVerified(true);
         users.save(user);
     }
@@ -76,8 +77,11 @@ public class AuthService {
     public void resendVerification(String rawEmail) {
         users.findByEmail(normalize(rawEmail))
                 .filter(u -> !u.isEmailVerified())
-                .ifPresent(u -> emails.sendVerification(u.getEmail(), u.getFirstName(),
-                        tokens.create(u, TokenType.EMAIL_VERIFICATION, VERIFY_TTL)));
+                .ifPresent(u -> {
+                    String pending = tokens.latestPendingPasswordHash(u, TokenType.EMAIL_VERIFICATION);
+                    emails.sendVerification(u.getEmail(), u.getFirstName(),
+                            tokens.create(u, TokenType.EMAIL_VERIFICATION, VERIFY_TTL, pending));
+                });
     }
 
     /** Vérifie email + mot de passe */

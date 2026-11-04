@@ -25,6 +25,19 @@ public class VerificationTokenService {
 
     @Transactional
     public String create(User user, TokenType type, Duration ttl) {
+        return create(user, type, ttl, null);
+    }
+
+    /** Hash de mot de passe en attente du dernier token du couple (user, type), s'il existe. */
+    @Transactional(readOnly = true)
+    public String latestPendingPasswordHash(User user, TokenType type) {
+        return repository.findFirstByUserAndTypeOrderByIdDesc(user, type)
+                .map(VerificationToken::getPendingPasswordHash)
+                .orElse(null);
+    }
+
+    @Transactional
+    public String create(User user, TokenType type, Duration ttl, String pendingPasswordHash) {
         repository.deleteByUserAndType(user, type);
 
         byte[] bytes = new byte[32];
@@ -36,12 +49,18 @@ public class VerificationTokenService {
                 .user(user)
                 .type(type)
                 .expiresAt(Instant.now().plus(ttl))
+                .pendingPasswordHash(pendingPasswordHash)
                 .build());
         return raw;
     }
 
     @Transactional
     public User consume(String raw, TokenType type) {
+        return consumeToken(raw, type).getUser();
+    }
+
+    @Transactional
+    public VerificationToken consumeToken(String raw, TokenType type) {
         VerificationToken token = repository.findByTokenHashAndType(Hashing.sha256Hex(raw), type)
                 .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "INVALID_TOKEN"));
 
@@ -52,6 +71,6 @@ public class VerificationTokenService {
         if (repository.markUsed(token.getId(), now) == 0) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_TOKEN");
         }
-        return token.getUser();
+        return token;
     }
 }
