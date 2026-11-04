@@ -7,8 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpClientErrorException.Unauthorized;
 import org.springframework.web.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,51 +26,40 @@ public class BffAuthController {
         this.authServerClient = restClientBuilder.baseUrl(authServerUrl).build();
     }
 
+
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, Object> loginPayload, HttpServletRequest request) {
-        try {
-            LoginResponse response = authServerClient.post()
-                    .uri("/auth/login")
-                    .body(loginPayload)
-                    .retrieve()
-                    .body(LoginResponse.class);
+    public ResponseEntity<?> login(@RequestBody LoginRequest payload, HttpServletRequest request) {
+        LoginResponse response = authServerClient.post()
+                .uri("/auth/login")
+                .body(payload)
+                .retrieve()
+                .body(LoginResponse.class);
 
-            if (response == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-
-            if ("MFA_REQUIRED".equals(response.status())) {
-                return ResponseEntity.ok(Map.of(
-                        "status", "MFA_REQUIRED",
-                        "challengeId", response.challengeId() != null ? response.challengeId() : ""));
-            }
-
-            if (response.tokens() != null) {
-                Session.storeTokensInSession(request, response.tokens().accessToken(),
-                        response.tokens().refreshToken());
-            }
-
-            return ResponseEntity.ok(Map.of(
-                    "status", "OK",
-                    "user", response.user() != null ? response.user() : Map.of()));
-
-        } catch (Unauthorized e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of(
-                            "success", false,
-                            "code", "INVALID_CREDENTIALS",
-                            "message", "Email ou mot de passe incorrect."));
-        } catch (HttpClientErrorException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .body(e.getResponseBodyAsString());
+        if (response == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+
+        if ("MFA_REQUIRED".equals(response.status())) {
+            return ResponseEntity.ok(Map.of(
+                    "status", "MFA_REQUIRED",
+                    "challengeId", response.challengeId() != null ? response.challengeId() : ""));
+        }
+
+        if (response.tokens() != null) {
+            Session.storeTokensInSession(request, response.tokens().accessToken(),
+                    response.tokens().refreshToken());
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "status", "OK",
+                "user", response.user() != null ? response.user() : Map.of()));
     }
 
     @PostMapping("/mfa/verify")
-    public ResponseEntity<?> verifyMfa(@RequestBody Map<String, Object> mfaPayload, HttpServletRequest request) {
+    public ResponseEntity<?> verifyMfa(@RequestBody MfaVerifyRequest payload, HttpServletRequest request) {
         AuthResult result = authServerClient.post()
                 .uri("/auth/mfa/verify")
-                .body(mfaPayload)
+                .body(payload)
                 .retrieve()
                 .body(AuthResult.class);
 
@@ -116,6 +103,12 @@ public class BffAuthController {
 
         // 4. Renvoi d'un statut 204 (No Content) à Angular
         return ResponseEntity.noContent().build();
+    }
+
+    public record LoginRequest(String email, String password) {
+    }
+
+    public record MfaVerifyRequest(String challengeId, String code) {
     }
 
     private record RefreshRequest(String refreshToken) {
