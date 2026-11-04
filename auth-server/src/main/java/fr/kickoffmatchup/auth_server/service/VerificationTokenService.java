@@ -28,7 +28,6 @@ public class VerificationTokenService {
         return create(user, type, ttl, null);
     }
 
-    /** Hash de mot de passe en attente du dernier token du couple (user, type), s'il existe. */
     @Transactional(readOnly = true)
     public String latestPendingPasswordHash(User user, TokenType type) {
         return repository.findFirstByUserAndTypeOrderByIdDesc(user, type)
