@@ -34,3 +34,5 @@ build/
 
 certs/
 *.pem
+### Secrets locaux ###
+.env

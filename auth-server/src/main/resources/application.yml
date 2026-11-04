@@ -4,27 +4,24 @@ server:
 spring:
   application:
     name: auth-server
+  config:
+    import: optional:file:.env[.properties]
 
   session:
     store-type: redis
     redis:
       namespace: "kickoffmatchup:session"
 
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/${DB_NAME:user_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
     username: ${DB_USER:user-service-user}
-    password: ${DB_PASSWORD:user-service-password}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: validate
-    show-sql: true
+      ddl-auto: update
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
@@ -43,8 +40,8 @@ spring:
             enable: ${MAIL_STARTTLS:false}
 
 app:
-  cookie-secure: ${COOKIE_SECURE:false}
-  frontend-url: ${FRONTEND_URL:http://localhost:4200}
+  frontend-url: ${FRONTEND_URL:http://localhost}
+  auth-server-url: ${AUTH_SERVER_URL:http://localhost:9000}
   
   mail:
     from: ${MAIL_FROM:no-reply@kickoffmatchup.fr}
@@ -64,3 +61,24 @@ app:
 
 springdoc:
   default-produces-media-type: application/json
+
+  
+logging:
+  level:
+    root: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    fr.kickoffmatchup: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
