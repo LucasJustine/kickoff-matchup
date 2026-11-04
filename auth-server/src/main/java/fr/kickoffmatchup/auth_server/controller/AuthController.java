@@ -108,12 +108,9 @@ public class AuthController {
         return UserDto.from(current(jwt));
     }
 
-    /** Active/désactive le MFA par email. (À durcir : demander le mot de passe pour désactiver.) */
     @PutMapping("/me/mfa")
-    public UserDto setMfa(@AuthenticationPrincipal Jwt jwt, @RequestBody MfaToggleRequest body) {
-        User user = current(jwt);
-        user.setMfaEnabled(body.enabled());
-        return UserDto.from(users.save(user));
+    public UserDto setMfa(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody MfaToggleRequest body) {
+        return UserDto.from(authService.setMfa(current(jwt), body.enabled(), body.currentPassword()));
     }
 
     /** Récupère l'utilisateur courant à partir du token JWT. */
