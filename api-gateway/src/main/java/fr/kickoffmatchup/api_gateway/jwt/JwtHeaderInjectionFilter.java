@@ -47,7 +47,6 @@ public class JwtHeaderInjectionFilter extends OncePerRequestFilter {
     
     private static final Logger log = LoggerFactory.getLogger(JwtHeaderInjectionFilter.class);
 
-    /** On renouvelle un peu avant l'expiration pour ne pas expirer entre la gateway et le service aval. */
     private static final Duration REFRESH_MARGIN = Duration.ofSeconds(30);
 
     private static final int LOCK_STRIPES = 64;
@@ -78,15 +77,11 @@ public class JwtHeaderInjectionFilter extends OncePerRequestFilter {
         if (token != null) {
             Instant expiresAt = expiresAt(token);
             Instant now = Instant.now();
-            System.out.println("Expires at: " + expiresAt);
-            System.out.println("Now: " + now);
             if (expiresAt != null && expiresAt.isBefore(now.plus(REFRESH_MARGIN))) {
                 String renewed = renew(request, token);
                 if (renewed != null) {
                     token = renewed;
                 } else if (expiresAt.isBefore(now)) {
-                    // Expiré et non renouvelable : pas de Bearer. La chaîne de sécurité tranche (401 sur une route
-                    // protégée) ; une route publique (login, providers…) reste utilisable pour se reconnecter.
                     token = null;
                 }
             }
