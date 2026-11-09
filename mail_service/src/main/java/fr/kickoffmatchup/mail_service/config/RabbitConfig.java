@@ -10,40 +10,47 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-
 @Configuration
 public class RabbitConfig {
 
     public static final String EXCHANGE = "mail.exchange";
-    public static final String ROUTING_KEY = "mail.send";
-    public static final String QUEUE = "mail.queue";
-    public static final String DLQ = "mail.queue.dlq";
 
+    public static final String AUTH_ROUTING_KEY = "mail.auth";
+    public static final String AUTH_QUEUE = "mail.auth.queue";
+    public static final String AUTH_DLQ = "mail.auth.queue.dlq";
+    
     @Bean
     DirectExchange mailExchange() {
         return new DirectExchange(EXCHANGE, true, false);
     }
 
+    // ---------- Mails d'auth ----------
     @Bean
-    Queue mailQueue() {
-        return QueueBuilder.durable(QUEUE)
-                .deadLetterExchange("")
-                .deadLetterRoutingKey(DLQ)
-                .build();
+    Queue mailAuthQueue() {
+        return queueWithDlq(AUTH_QUEUE, AUTH_DLQ);
     }
 
     @Bean
-    Queue mailDeadLetterQueue() {
-        return QueueBuilder.durable(DLQ).build();
+    Queue mailAuthDlq() {
+        return QueueBuilder.durable(AUTH_DLQ).build();
     }
 
     @Bean
-    Binding mailBinding(Queue mailQueue, DirectExchange mailExchange) {
-        return BindingBuilder.bind(mailQueue).to(mailExchange).with(ROUTING_KEY);
+    Binding mailAuthBinding() {
+        return BindingBuilder.bind(mailAuthQueue()).to(mailExchange()).with(AUTH_ROUTING_KEY);
     }
 
+   
     @Bean
     MessageConverter jsonMessageConverter() {
         return new JacksonJsonMessageConverter();
+    }
+
+
+    private Queue queueWithDlq(String queue, String dlq) {
+        return QueueBuilder.durable(queue)
+                .deadLetterExchange("")
+                .deadLetterRoutingKey(dlq)
+                .build();
     }
 }

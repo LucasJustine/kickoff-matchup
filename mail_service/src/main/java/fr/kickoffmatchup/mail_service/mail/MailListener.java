@@ -15,7 +15,7 @@ public class MailListener {
     }
 
     
-    @RabbitListener(queues = RabbitConfig.QUEUE)
+    @RabbitListener(queues = RabbitConfig.AUTH_QUEUE)
     public void on(MailMessage message) {
         mailService.send(message);
     }
