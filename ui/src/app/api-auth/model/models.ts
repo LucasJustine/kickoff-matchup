@@ -2,6 +2,7 @@ export * from './authResult';
 export * from './emailRequest';
 export * from './loginRequest';
 export * from './loginResponse';
+export * from './mfaResendRequest';
 export * from './mfaToggleRequest';
 export * from './mfaVerifyRequest';
 export * from './refreshRequest';

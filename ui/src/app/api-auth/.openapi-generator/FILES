@@ -12,6 +12,7 @@ model/authResult.ts
 model/emailRequest.ts
 model/loginRequest.ts
 model/loginResponse.ts
+model/mfaResendRequest.ts
 model/mfaToggleRequest.ts
 model/mfaVerifyRequest.ts
 model/models.ts

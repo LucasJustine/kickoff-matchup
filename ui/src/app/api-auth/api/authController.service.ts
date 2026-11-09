@@ -25,6 +25,8 @@ import { LoginRequest } from '../model/loginRequest';
 // @ts-ignore
 import { LoginResponse } from '../model/loginResponse';
 // @ts-ignore
+import { MfaResendRequest } from '../model/mfaResendRequest';
+// @ts-ignore
 import { MfaToggleRequest } from '../model/mfaToggleRequest';
 // @ts-ignore
 import { MfaVerifyRequest } from '../model/mfaVerifyRequest';
@@ -337,6 +339,70 @@ export class AuthControllerService extends BaseService {
             {
                 context: localVarHttpContext,
                 body: registerRequest,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * @endpoint post /auth/mfa/resend
+     * @param mfaResendRequest 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public resendMfa(mfaResendRequest: MfaResendRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any>;
+    public resendMfa(mfaResendRequest: MfaResendRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
+    public resendMfa(mfaResendRequest: MfaResendRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<any>>;
+    public resendMfa(mfaResendRequest: MfaResendRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (mfaResendRequest === null || mfaResendRequest === undefined) {
+            throw new Error('Required parameter mfaResendRequest was null or undefined when calling resendMfa.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/auth/mfa/resend`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<any>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: mfaResendRequest,
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,

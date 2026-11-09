@@ -11,5 +11,6 @@
 
 export interface MfaToggleRequest { 
     enabled?: boolean;
+    currentPassword?: string;
 }
 
