@@ -32,7 +32,6 @@ public class AuthController {
     private final OAuthUserService oauthUsers;
     private final UserRepository users;
 
-    // ----- inscription, vérification email, mot de passe oublié -----
     @PostMapping("/register")
     public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequest body) {
         authService.register(body);
@@ -63,7 +62,6 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
-    // ----- connexion -----
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest body) {
         User user = authService.authenticate(body.email(), body.password());
@@ -81,6 +79,8 @@ public class AuthController {
         User user = users.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "MFA_CHALLENGE_EXPIRED"));
         return tokens.issueFor(user);
+    }
+
     @PostMapping("/mfa/resend")
     public ResponseEntity<Void> resendMfa(@Valid @RequestBody MfaResendRequest body) {
         MfaService.Resend resend = mfaService.resend(body.challengeId());
@@ -90,8 +90,6 @@ public class AuthController {
         return ResponseEntity.accepted().build();
     }
 
-    }
-
     /** Connexion sociale : le client présente l'ID token reçu du provider ; on le vérifie (signature + audience). */
     @PostMapping("/social/{provider}")
     public AuthResult social(@PathVariable String provider, @Valid @RequestBody SocialLoginRequest body) {
@@ -99,7 +97,6 @@ public class AuthController {
         return tokens.issueFor(oauthUsers.findOrCreate(profile));
     }
 
-    // ----- cycle de vie des tokens -----
     @PostMapping("/refresh")
     public AuthResult refresh(@Valid @RequestBody RefreshRequest body) {
         return tokens.refresh(body.refreshToken());
@@ -111,7 +108,6 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
-    // ----- utilisateur courant (Bearer access token) -----
     @GetMapping("/me")
     public UserDto me(@AuthenticationPrincipal Jwt jwt) {
         return UserDto.from(current(jwt));
@@ -122,13 +118,11 @@ public class AuthController {
         return UserDto.from(authService.setMfa(current(jwt), body.enabled(), body.currentPassword()));
     }
 
-    /** Récupère l'utilisateur courant à partir du token JWT. */
     private User current(Jwt jwt) {
         return users.findById(Long.valueOf(jwt.getSubject()))
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED"));
     }
 
-    /** Convertit une chaîne en fournisseur d'authentification. */
     private static AuthProvider parseProvider(String value) {
         try {
             return AuthProvider.valueOf(value.toUpperCase(Locale.ROOT));
