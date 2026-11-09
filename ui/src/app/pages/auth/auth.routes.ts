@@ -1,9 +1,10 @@
 import { Routes } from '@angular/router';
-import { EmailRequest } from './email-request/email-request';
+import { guestGuard } from '../../guard/guest.guard';
 
 export const authRoutes: Routes = [
     {
         path: 'login',
+        canActivate: [guestGuard],
         loadComponent: () => import('./login/login').then((m) => m.Login),
     },
     {

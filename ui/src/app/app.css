@@ -1,7 +1,7 @@
 :host {
   display: flex;
+  min-height: 100vh;
 }
-
 
 .top-nav {
   line-height: 64px;
@@ -38,10 +38,12 @@
 }
 
 nz-content {
+  display: flex;
   padding: 24px 50px;
 }
 
 .inner-content {
+  flex: 1;
   padding: 24px;
   background: #fff;
 }
