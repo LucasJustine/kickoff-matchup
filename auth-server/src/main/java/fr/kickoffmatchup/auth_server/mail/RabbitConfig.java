@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitConfig {
     public static final String EXCHANGE = "mail.exchange";
-    public static final String ROUTING_KEY = "mail.send";
+    public static final String ROUTING_KEY = "mail.auth";
 
     @Bean
     DirectExchange mailExchange() { return new DirectExchange(EXCHANGE, true, false); }
