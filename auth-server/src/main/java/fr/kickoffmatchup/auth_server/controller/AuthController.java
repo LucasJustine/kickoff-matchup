@@ -81,6 +81,15 @@ public class AuthController {
         User user = users.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "MFA_CHALLENGE_EXPIRED"));
         return tokens.issueFor(user);
+    @PostMapping("/mfa/resend")
+    public ResponseEntity<Void> resendMfa(@Valid @RequestBody MfaResendRequest body) {
+        MfaService.Resend resend = mfaService.resend(body.challengeId());
+        User user = users.findById(resend.userId())
+                .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "MFA_CHALLENGE_EXPIRED"));
+        emailService.sendMfaCode(user.getEmail(), resend.code());
+        return ResponseEntity.accepted().build();
+    }
+
     }
 
     /** Connexion sociale : le client présente l'ID token reçu du provider ; on le vérifie (signature + audience). */

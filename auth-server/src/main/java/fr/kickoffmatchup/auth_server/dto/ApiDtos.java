@@ -28,6 +28,8 @@ public final class ApiDtos {
             @NotBlank @Size(max = 100) String challengeId,
             @NotBlank @Pattern(regexp = "\\d{6}") String code) {}
 
+    public record MfaResendRequest(@NotBlank @Size(max = 100) String challengeId) {}
+
     public record RefreshRequest(@NotBlank @Size(max = 200) String refreshToken) {}
 
   
