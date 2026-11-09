@@ -28,6 +28,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final Set<String> LIMITED_PATHS = Set.of(
             "/bff/auth/login",
             "/bff/auth/mfa/verify",
+            "/bff/auth/mfa/resend",
             "/bff/auth/register",
             "/bff/auth/forgot-password",
             "/bff/auth/resend-verification");

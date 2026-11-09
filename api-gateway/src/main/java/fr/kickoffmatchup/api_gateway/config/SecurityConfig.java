@@ -45,6 +45,7 @@ public class SecurityConfig {
     private static final String[] AUTH_ENTRY_PATHS = {
             "/bff/auth/login",
             "/bff/auth/mfa/verify",
+            "/bff/auth/mfa/resend",
             "/oauth2/**",
             "/login/oauth2/code/**",
             "/bff/auth/register",
