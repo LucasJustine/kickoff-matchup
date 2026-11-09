@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormGroup, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
@@ -17,7 +17,7 @@ import { SocialLoginButton } from '../../../components/providers-button/social-l
     imports: [ReactiveFormsModule, RouterLink, NzAlertModule, NzButtonModule, NzFormModule, NzInputModule, SocialLoginButton],
     templateUrl: './login.html',
 })
-export class Login implements OnInit {
+export class Login implements OnInit, OnDestroy {
     private readonly fb = inject(NonNullableFormBuilder);
     private readonly api = inject(AuthControllerService);
     private readonly router = inject(Router);
@@ -33,8 +33,11 @@ export class Login implements OnInit {
     protected readonly loading = signal(false);
     protected readonly error = signal('');
     protected readonly emailNotVerified = signal(false);
-    /** Renseigné quand l'API répond MFA_REQUIRED : on affiche alors l'étape « code ». */
     protected readonly challengeId = signal<string | null>(null);
+    protected readonly resendIn = signal(0);
+    protected readonly resendsExhausted = signal(false);
+    protected readonly info = signal('');
+    private timer?: ReturnType<typeof setInterval>;
 
     protected readonly form = this.fb.group({
         email: ['', [Validators.required, Validators.email]],
@@ -48,12 +51,10 @@ export class Login implements OnInit {
     ngOnInit(): void {
         this.providersService.loadProviders();
 
-        // Erreur renvoyée par le gateway après un échec de connexion sociale (/login?error=CODE)
         const errorCode = this.route.snapshot.queryParamMap.get('error');
         if (errorCode) this.error.set(handleApiError(this.form, { code: errorCode }));
     }
 
-    /** Redirection pleine page vers le gateway ; il ramène sur returnUrl après la connexion. */
     protected loginWithProvider(provider: { loginUrl: string }): void {
         const url = this.returnUrl
             ? `${provider.loginUrl}?returnUrl=${encodeURIComponent(this.returnUrl)}`
@@ -69,6 +70,9 @@ export class Login implements OnInit {
                 this.loading.set(false);
                 if (res.status === LoginResponse.StatusEnum.MfaRequired) {
                     this.challengeId.set(res.challengeId ?? null);
+                    this.info.set('');
+                    this.resendsExhausted.set(false);
+                    this.startCountdown();
                 } else {
                     this.success();
                 }
@@ -86,14 +90,54 @@ export class Login implements OnInit {
                 next: () => this.success(),
                 error: (e) => {
                     const code = toApiError(e).code;
-                    // Challenge périmé ou trop d'essais : on repart de l'étape email/mot de passe.
-                    if (code === 'MFA_CHALLENGE_EXPIRED' || code === 'MFA_TOO_MANY_ATTEMPTS') {
-                        this.challengeId.set(null);
-                        this.mfaForm.reset();
+                    if (code === 'MFA_CHALLENGE_EXPIRED') {
+                        this.leaveMfa();
                     }
                     this.fail(this.mfaForm, e);
                 },
             });
+    }
+
+    resendMfa(): void {
+        if (this.resendIn() > 0 || this.resendsExhausted() || !this.challengeId()) return;
+        this.begin();
+        this.info.set('');
+        this.api.resendMfa({ challengeId: this.challengeId()! }).subscribe({
+            next: () => {
+                this.loading.set(false);
+                this.mfaForm.reset();
+                this.info.set('Un nouveau code vient de vous être envoyé. Le précédent n’est plus valable.');
+                this.startCountdown();
+            },
+            error: (e) => {
+                const code = toApiError(e).code;
+                if (code === 'MFA_CHALLENGE_EXPIRED') this.leaveMfa();
+                if (code === 'MFA_TOO_MANY_RESENDS') this.resendsExhausted.set(true);
+                if (code === 'MFA_RESEND_TOO_SOON') this.startCountdown();
+                this.fail(this.mfaForm, e);
+            },
+        });
+    }
+
+    protected leaveMfa(): void {
+        clearInterval(this.timer);
+        this.resendIn.set(0);
+        this.challengeId.set(null);
+        this.mfaForm.reset();
+        this.info.set('');
+    }
+
+    private startCountdown(seconds = 30): void {
+        clearInterval(this.timer);
+        this.resendIn.set(seconds);
+        this.timer = setInterval(() => {
+            this.resendIn.update((s) => Math.max(0, s - 1));
+            if (this.resendIn() === 0) clearInterval(this.timer);
+        }, 1000);
+    }
+
+    ngOnDestroy(): void {
+        clearInterval(this.timer);
     }
 
     private begin(): void {

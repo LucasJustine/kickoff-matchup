@@ -73,6 +73,27 @@
           Valider
         </button>
       </form>
+
+      @if (info()) {
+        <nz-alert class="mt-4 block" nzType="success" nzShowIcon [nzMessage]="info()" />
+      }
+
+      <div class="mt-4 flex flex-col items-center gap-2">
+        @if (resendsExhausted()) {
+          <a href="#" (click)="$event.preventDefault(); leaveMfa()">Revenir à la connexion</a>
+        } @else {
+          <button
+            nz-button
+            nzType="default"
+            nzBlock
+            type="button"
+            [disabled]="resendIn() > 0 || loading()"
+            (click)="resendMfa()"
+          >
+            Renvoyer le code @if (resendIn() > 0) { ({{ resendIn() }} s) }
+          </button>
+        }
+      </div>
     }
   </div>
 </div>
