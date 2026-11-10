@@ -1,7 +1,16 @@
 {
   "app": {
     "title": "Kickoff Matchup",
-    "nav": { "home": "Accueil", "login": "Connexion", "profile": "Profil", "label": "Navigation principale", "open": "Ouvrir le menu", "close": "Fermer le menu" }
+    "nav": {
+      "home": "Accueil",
+      "login": "Connexion",
+      "profile": "Profil",
+      "label": "Navigation principale",
+      "open": "Ouvrir le menu",
+      "close": "Fermer le menu",
+      "logout": "Se déconnecter",
+      "language": "Langue"
+    }
   },
   "common": {
     "email": "Email",
@@ -9,7 +18,10 @@
     "loading": "Chargement…",
     "cancel": "Annuler",
     "backToLogin": "Retour à la connexion",
-    "signIn": "Se connecter"
+    "signIn": "Se connecter",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "save": "Enregistrer"
   },
   "validation": {
     "required": "Champ obligatoire",
@@ -37,7 +49,15 @@
     "UNSUPPORTED_PROVIDER": "Fournisseur de connexion non supporté.",
     "INVALID_SOCIAL_TOKEN": "Connexion via le fournisseur refusée.",
     "OAUTH_EMAIL_NOT_VERIFIED": "L'email de votre compte n'est pas vérifié chez le fournisseur.",
-    "SOCIAL_PROVIDER_UNAVAILABLE": "Fournisseur indisponible, réessayez plus tard."
+    "SOCIAL_PROVIDER_UNAVAILABLE": "Fournisseur indisponible, réessayez plus tard.",
+    "INVALID_CURRENT_PASSWORD": "Mot de passe incorrect.",
+    "PASSWORD_REQUIRED_FOR_MFA": "Définissez un mot de passe avant d'activer la double authentification.",
+    "VALIDATION_ERROR": "Certains champs sont invalides.",
+    "TOO_MANY_REQUESTS": "Trop de tentatives. Réessayez dans une minute.",
+    "MAIL_QUEUE_UNAVAILABLE": "L'email n'a pas pu être envoyé. Réessayez dans quelques instants.",
+    "AUTH_SERVER_UNAVAILABLE": "Le service de connexion est indisponible. Réessayez dans quelques instants.",
+    "AUTH_SERVER_ERROR": "Le service de connexion a rencontré une erreur. Réessayez.",
+    "NETWORK_ERROR": "Serveur injoignable. Vérifiez votre connexion."
   },
   "auth": {
     "continueWith": "Continuer avec",
@@ -47,7 +67,8 @@
       "forgotPassword": "Mot de passe oublié ?",
       "noAccount": "Pas encore de compte ?",
       "createAccount": "Créer un compte",
-      "resendVerification": "Renvoyer l'email de confirmation"
+      "resendVerification": "Renvoyer l'email de confirmation",
+      "passwordChanged": "Mot de passe modifié. Reconnectez-vous."
     },
     "mfa": {
       "intro": "Un code à 6 chiffres vient de vous être envoyé par email (valable 5 minutes).",
@@ -60,8 +81,6 @@
     },
     "register": {
       "title": "Créer un compte",
-      "firstName": "Prénom",
-      "lastName": "Nom",
       "confirmPassword": "Confirmer le mot de passe",
       "submit": "Créer mon compte",
       "sentTitle": "Presque fini !",
@@ -99,7 +118,10 @@
   },
   "profile": {
     "title": "Mon profil",
-    "identity": { "title": "Informations personnelles" },
+    "identity": {
+      "title": "Informations personnelles",
+      "saved": "Informations mises à jour."
+    },
     "mfa": {
       "title": "Double authentification",
       "description": "Un code à 6 chiffres est envoyé par email à chaque connexion.",
@@ -115,8 +137,7 @@
       "new": "Nouveau mot de passe",
       "confirm": "Confirmer le nouveau mot de passe",
       "submit": "Changer le mot de passe",
-      "unavailable": "Le changement de mot de passe n'est pas encore disponible.",
-      "changed": "Mot de passe modifié."
+      "hint": "Après le changement, vous serez déconnecté de tous vos appareils."
     },
     "session": {
       "title": "Session",
@@ -128,8 +149,19 @@
       "description": "Cette action est définitive : votre compte et vos données seront supprimés.",
       "button": "Supprimer mon compte",
       "confirmPrompt": "Saisissez votre mot de passe pour confirmer la suppression.",
-      "confirm": "Supprimer définitivement",
-      "unavailable": "La suppression du compte n'est pas encore disponible."
+      "confirm": "Supprimer définitivement"
     }
+  },
+  "home": {
+    "title": "Trouvez un adversaire, fixez le coup d'envoi.",
+    "lead": "Kickoff Matchup met en relation les équipes de football amateur pour organiser leurs matchs.",
+    "register": "Créer un compte",
+    "greeting": "Bonjour {{name}}",
+    "profile": "Mon profil"
+  },
+  "notFound": {
+    "title": "Page introuvable",
+    "text": "Cette page n'existe pas ou a été déplacée.",
+    "back": "Retour à l'accueil"
   }
 }

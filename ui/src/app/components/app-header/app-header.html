@@ -6,11 +6,29 @@
 
   <nav class="hidden min-w-0 flex-1 md:block" [attr.aria-label]="'app.nav.label' | translate">
     <ul nz-menu nzTheme="dark" nzMode="horizontal">
-      @for (link of links; track link.path) {
+      @for (link of links(); track link.path) {
         <li nz-menu-item nzMatchRouter [routerLink]="link.path">{{ link.label | translate }}</li>
+      }
+      @if (authenticated()) {
+        <li nz-menu-item (click)="logout()">{{ 'app.nav.logout' | translate }}</li>
       }
     </ul>
   </nav>
+
+  <div class="hidden flex-none items-center gap-1 md:flex" role="group" [attr.aria-label]="'app.nav.language' | translate">
+    @for (lang of langs; track lang) {
+      <button
+        nz-button
+        nzSize="small"
+        type="button"
+        [nzType]="lang === currentLang() ? 'primary' : 'default'"
+        [attr.aria-pressed]="lang === currentLang()"
+        (click)="setLanguage(lang)"
+      >
+        {{ lang.toUpperCase() }}
+      </button>
+    }
+  </div>
 
   <button
     type="button"
@@ -52,12 +70,29 @@
     </div>
     <nav class="flex-1" [attr.aria-label]="'app.nav.label' | translate">
       <ul nz-menu nzTheme="dark" nzMode="inline">
-        @for (link of links; track link.path) {
+        @for (link of links(); track link.path) {
           <li nz-menu-item nzMatchRouter [routerLink]="link.path" (click)="closeMenu()">
             {{ link.label | translate }}
           </li>
         }
+        @if (authenticated()) {
+          <li nz-menu-item (click)="logout()">{{ 'app.nav.logout' | translate }}</li>
+        }
       </ul>
     </nav>
+    <div class="flex flex-none items-center gap-2 p-4" role="group" [attr.aria-label]="'app.nav.language' | translate">
+      <span class="mr-auto">{{ 'app.nav.language' | translate }}</span>
+      @for (lang of langs; track lang) {
+        <button
+          nz-button
+          type="button"
+          [nzType]="lang === currentLang() ? 'primary' : 'default'"
+          [attr.aria-pressed]="lang === currentLang()"
+          (click)="setLanguage(lang)"
+        >
+          {{ lang.toUpperCase() }}
+        </button>
+      }
+    </div>
   </div>
 </dialog>

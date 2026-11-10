@@ -1,15 +1,18 @@
-import { Component, DestroyRef, DOCUMENT, ElementRef, effect, inject, signal, viewChild } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, computed, DestroyRef, DOCUMENT, ElementRef, effect, inject, signal, viewChild } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
+import { Lang, LANGS, LanguageService } from '../../services/language.service';
+import { SessionService } from '../../services/session.service';
 
 const DESKTOP_MIN_WIDTH = 768;
 
 @Component({
     selector: 'app-header',
     templateUrl: './app-header.html',
-    imports: [RouterLink, TranslatePipe, NzLayoutModule, NzMenuModule],
+    imports: [RouterLink, TranslatePipe, NzButtonModule, NzLayoutModule, NzMenuModule],
     host: { class: 'block' },
     styles: `
         dialog {
@@ -34,17 +37,26 @@ const DESKTOP_MIN_WIDTH = 768;
 })
 export class AppHeader {
     private readonly root = inject(DOCUMENT).documentElement;
+    private readonly router = inject(Router);
+    private readonly session = inject(SessionService);
+    private readonly language = inject(LanguageService);
     private readonly menu = viewChild.required<ElementRef<HTMLDialogElement>>('menu');
 
     protected readonly menuOpen = signal(false);
+    protected readonly authenticated = this.session.authenticated;
+    protected readonly langs = LANGS;
+    protected readonly currentLang = this.language.current;
 
-    protected readonly links = [
+    protected readonly links = computed(() => [
         { path: '/welcome', label: 'app.nav.home' },
-        { path: '/auth/login', label: 'app.nav.login' },
-        { path: '/profile', label: 'app.nav.profile' },
-    ];
+        this.authenticated()
+            ? { path: '/profile', label: 'app.nav.profile' }
+            : { path: '/auth/login', label: 'app.nav.login' },
+    ]);
 
     constructor() {
+        this.session.check().subscribe();
+
         effect(() => {
             const el = this.menu().nativeElement;
             const open = this.menuOpen();
@@ -75,5 +87,14 @@ export class AppHeader {
 
     protected onDialogClick(event: MouseEvent): void {
         if (event.target === this.menu().nativeElement) this.closeMenu();
+    }
+
+    protected setLanguage(lang: Lang): void {
+        this.language.use(lang).subscribe();
+    }
+
+    protected logout(): void {
+        this.closeMenu();
+        this.session.logout().subscribe(() => this.router.navigate(['/auth/login']));
     }
 }

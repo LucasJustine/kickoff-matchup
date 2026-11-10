@@ -1,7 +1,16 @@
 {
   "app": {
     "title": "Kickoff Matchup",
-    "nav": { "home": "Home", "login": "Sign in", "profile": "Profile", "label": "Main navigation", "open": "Open menu", "close": "Close menu" }
+    "nav": {
+      "home": "Home",
+      "login": "Sign in",
+      "profile": "Profile",
+      "label": "Main navigation",
+      "open": "Open menu",
+      "close": "Close menu",
+      "logout": "Sign out",
+      "language": "Language"
+    }
   },
   "common": {
     "email": "Email",
@@ -9,7 +18,10 @@
     "loading": "Loading…",
     "cancel": "Cancel",
     "backToLogin": "Back to sign in",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "save": "Save"
   },
   "validation": {
     "required": "Required field",
@@ -37,7 +49,15 @@
     "UNSUPPORTED_PROVIDER": "Unsupported sign-in provider.",
     "INVALID_SOCIAL_TOKEN": "Sign-in through the provider was refused.",
     "OAUTH_EMAIL_NOT_VERIFIED": "Your account email isn't verified with the provider.",
-    "SOCIAL_PROVIDER_UNAVAILABLE": "Provider unavailable, try again later."
+    "SOCIAL_PROVIDER_UNAVAILABLE": "Provider unavailable, try again later.",
+    "INVALID_CURRENT_PASSWORD": "Incorrect password.",
+    "PASSWORD_REQUIRED_FOR_MFA": "Set a password before enabling two-factor authentication.",
+    "VALIDATION_ERROR": "Some fields are invalid.",
+    "TOO_MANY_REQUESTS": "Too many attempts. Try again in a minute.",
+    "MAIL_QUEUE_UNAVAILABLE": "The email couldn't be sent. Try again in a moment.",
+    "AUTH_SERVER_UNAVAILABLE": "The sign-in service is unavailable. Try again in a moment.",
+    "AUTH_SERVER_ERROR": "The sign-in service ran into an error. Try again.",
+    "NETWORK_ERROR": "Can't reach the server. Check your connection."
   },
   "auth": {
     "continueWith": "Continue with",
@@ -47,7 +67,8 @@
       "forgotPassword": "Forgot your password?",
       "noAccount": "Don't have an account yet?",
       "createAccount": "Create an account",
-      "resendVerification": "Resend the confirmation email"
+      "resendVerification": "Resend the confirmation email",
+      "passwordChanged": "Password changed. Sign in again."
     },
     "mfa": {
       "intro": "A 6-digit code has just been sent to you by email (valid for 5 minutes).",
@@ -60,8 +81,6 @@
     },
     "register": {
       "title": "Create an account",
-      "firstName": "First name",
-      "lastName": "Last name",
       "confirmPassword": "Confirm password",
       "submit": "Create my account",
       "sentTitle": "Almost done!",
@@ -99,7 +118,10 @@
   },
   "profile": {
     "title": "My profile",
-    "identity": { "title": "Personal information" },
+    "identity": {
+      "title": "Personal information",
+      "saved": "Information updated."
+    },
     "mfa": {
       "title": "Two-factor authentication",
       "description": "A 6-digit code is emailed to you at each sign-in.",
@@ -115,8 +137,7 @@
       "new": "New password",
       "confirm": "Confirm new password",
       "submit": "Change password",
-      "unavailable": "Changing your password isn't available yet.",
-      "changed": "Password changed."
+      "hint": "After the change, you will be signed out of all your devices."
     },
     "session": {
       "title": "Session",
@@ -128,8 +149,19 @@
       "description": "This can't be undone: your account and data will be deleted.",
       "button": "Delete my account",
       "confirmPrompt": "Enter your password to confirm the deletion.",
-      "confirm": "Delete permanently",
-      "unavailable": "Account deletion isn't available yet."
+      "confirm": "Delete permanently"
     }
+  },
+  "home": {
+    "title": "Find an opponent, set the kickoff.",
+    "lead": "Kickoff Matchup connects amateur football teams so they can organise their matches.",
+    "register": "Create an account",
+    "greeting": "Hello {{name}}",
+    "profile": "My profile"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "text": "This page doesn't exist or has been moved.",
+    "back": "Back to home"
   }
 }

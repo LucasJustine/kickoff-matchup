@@ -17,11 +17,13 @@ import { fr_FR, provideNzI18n } from 'ng-zorro-antd/i18n';
 import { registerLocaleData } from '@angular/common';
 import fr from '@angular/common/locales/fr';
 import { provideNzDateFnsAdapter } from 'ng-zorro-antd/core/time';
-import { provideTranslateService, TranslateService } from '@ngx-translate/core';
+import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { provideApi } from './api-auth';
 import { unauthorizedInterceptor } from './interceptors/unauthorized.interceptor';
 import { errorInterceptor } from './interceptors/error.interceptor';
+import { languageInterceptor } from './interceptors/language.interceptor';
+import { LanguageService } from './services/language.service';
 
 registerLocaleData(fr);
 
@@ -42,14 +44,14 @@ export const appConfig: ApplicationConfig = {
                 //       });
                 //       return next(reqWithCreds);
                 //     },
+                languageInterceptor,
                 unauthorizedInterceptor,
                 errorInterceptor,
             ]),
         ),
         provideTranslateService({ lang: 'fr', fallbackLang: 'fr' }),
         provideTranslateHttpLoader({ prefix: './i18n/', suffix: '.json' }),
-        // Évite d'afficher les clés brutes le temps du chargement du fichier de langue.
-        provideAppInitializer(() => firstValueFrom(inject(TranslateService).use('fr'))),
+        provideAppInitializer(() => firstValueFrom(inject(LanguageService).init())),
         provideNzI18n(fr_FR),
         provideNzDateFnsAdapter(),
         provideApi({
