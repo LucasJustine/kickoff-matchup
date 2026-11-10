@@ -6,27 +6,50 @@
 
   <nav class="hidden min-w-0 flex-1 md:block" [attr.aria-label]="'app.nav.label' | translate">
     <ul nz-menu nzTheme="dark" nzMode="horizontal">
-      @for (link of links(); track link.path) {
+      @for (link of navLinks(); track link.path) {
         <li nz-menu-item nzMatchRouter [routerLink]="link.path">{{ link.label | translate }}</li>
-      }
-      @if (authenticated()) {
-        <li nz-menu-item (click)="logout()">{{ 'app.nav.logout' | translate }}</li>
       }
     </ul>
   </nav>
 
-  <div class="hidden flex-none items-center gap-1 md:flex" role="group" [attr.aria-label]="'app.nav.language' | translate">
-    @for (lang of langs; track lang) {
+  <div class="hidden flex-none items-center gap-5 md:flex">
+    <nz-segmented
+      nzSize="small"
+      [nzOptions]="langOptions"
+      [ngModel]="currentLang()"
+      (ngModelChange)="setLanguage($event)"
+      [attr.aria-label]="'app.nav.language' | translate"
+    />
+
+    @if (authenticated()) {
+      <span class="h-6 w-px bg-white/15" aria-hidden="true"></span>
+
       <button
-        nz-button
-        nzSize="small"
         type="button"
-        [nzType]="lang === currentLang() ? 'primary' : 'default'"
-        [attr.aria-pressed]="lang === currentLang()"
-        (click)="setLanguage(lang)"
+        class="flex cursor-pointer items-center gap-2 rounded-full border border-white/15 bg-white/5 p-1 text-white hover:bg-white/10"
+        nz-dropdown
+        nzPlacement="bottomRight"
+        [nzDropdownMenu]="accountMenu"
+        [attr.aria-label]="'app.nav.account' | translate"
       >
-        {{ lang.toUpperCase() }}
+         <nz-avatar nzSize="small" [nzText]="initials()" />
       </button>
+      <nz-dropdown-menu #accountMenu="nzDropdownMenu">
+        <ul nz-menu>
+          <li nz-menu-group [nzTitle]="accountTitle">
+            <ul>
+              <li nz-menu-item routerLink="/profile">{{ 'app.nav.profile' | translate }}</li>
+              <li nz-menu-item (click)="logout()">{{ 'app.nav.logout' | translate }}</li>
+            </ul>
+          </li>
+        </ul>
+      </nz-dropdown-menu>
+      <ng-template #accountTitle>
+        <div class="leading-snug">
+          <div class="font-semibold text-white">{{ fullName() }}</div>
+          <div class="text-xs">{{ email() }}</div>
+        </div>
+      </ng-template>
     }
   </div>
 
@@ -80,19 +103,14 @@
         }
       </ul>
     </nav>
-    <div class="flex flex-none items-center gap-2 p-4" role="group" [attr.aria-label]="'app.nav.language' | translate">
-      <span class="mr-auto">{{ 'app.nav.language' | translate }}</span>
-      @for (lang of langs; track lang) {
-        <button
-          nz-button
-          type="button"
-          [nzType]="lang === currentLang() ? 'primary' : 'default'"
-          [attr.aria-pressed]="lang === currentLang()"
-          (click)="setLanguage(lang)"
-        >
-          {{ lang.toUpperCase() }}
-        </button>
-      }
+    <div class="flex flex-none items-center justify-between gap-2 p-4">
+      <span>{{ 'app.nav.language' | translate }}</span>
+      <nz-segmented
+        [nzOptions]="langOptions"
+        [ngModel]="currentLang()"
+        (ngModelChange)="setLanguage($event)"
+        [attr.aria-label]="'app.nav.language' | translate"
+      />
     </div>
   </div>
 </dialog>
