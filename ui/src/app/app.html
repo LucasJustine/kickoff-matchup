@@ -1,19 +1,8 @@
-<nz-layout class="app-layout">
-  <nz-header>
-    <div class="logo">
-      <a>
-        <img src="https://ng.ant.design/assets/img/logo.svg" alt="logo" />
-        <h1>NG-ZORRO</h1>
-      </a>
-    </div>
-    <ul nz-menu class="top-nav" nzTheme="dark" nzMode="horizontal">
-        <li nz-menu-item nzMatchRouter routerLink="/welcome">Home</li>
-        <li nz-menu-item nzMatchRouter routerLink="/auth/login">Login</li>
-        <li nz-menu-item nzMatchRouter routerLink="/profile">Profile</li>
-    </ul>
-  </nz-header>
-  <nz-content>
-    <div class="inner-content">
+<nz-layout class="min-h-screen">
+  <app-header />
+
+  <nz-content class="flex! p-0! md:px-12! md:py-6!">
+    <div class="min-w-0 flex-1 p-4 md:bg-[#141414] md:p-6">
       <router-outlet></router-outlet>
     </div>
   </nz-content>

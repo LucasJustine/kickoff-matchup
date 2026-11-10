@@ -1,3 +1,8 @@
-/* You can add global styles to this file, and also import other style files */
 
 @import 'tailwindcss';
+
+html.modal-open {
+  overflow: hidden;
+}
+
+.ant-modal { transform-origin: 50% 50% !important; }

@@ -1,0 +1,63 @@
+<nz-header class="flex! items-center px-4! md:px-12!">
+  <a routerLink="/welcome" class="flex flex-none items-center gap-3 text-white! md:mr-6">
+    <img src="icon2.svg" alt="" class="h-8 w-8" />
+    <span class="text-xl font-semibold">{{ 'app.title' | translate }}</span>
+  </a>
+
+  <nav class="hidden min-w-0 flex-1 md:block" [attr.aria-label]="'app.nav.label' | translate">
+    <ul nz-menu nzTheme="dark" nzMode="horizontal">
+      @for (link of links; track link.path) {
+        <li nz-menu-item nzMatchRouter [routerLink]="link.path">{{ link.label | translate }}</li>
+      }
+    </ul>
+  </nav>
+
+  <button
+    type="button"
+    class="ml-auto! flex h-10 w-10 cursor-pointer items-center justify-center rounded border-0 bg-transparent text-white md:hidden"
+    aria-haspopup="dialog"
+    aria-controls="mobile-nav"
+    [attr.aria-expanded]="menuOpen()"
+    [attr.aria-label]="'app.nav.open' | translate"
+    (click)="openMenu()"
+  >
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  </button>
+</nz-header>
+
+<!-- Pas de classe d'affichage (flex, block…) sur le <dialog> : elle l'afficherait même fermé. -->
+<dialog
+  #menu
+  id="mobile-nav"
+  class="m-0 ml-auto h-full max-h-none w-72 max-w-[85vw] border-0 bg-transparent p-0 text-white backdrop:bg-black/60"
+  [attr.aria-label]="'app.nav.label' | translate"
+  (click)="onDialogClick($event)"
+  (cancel)="closeMenu()"
+  (close)="closeMenu()"
+>
+  <div class="flex h-full flex-col bg-[#141414]">
+    <div class="flex h-16 flex-none items-center justify-end px-4">
+      <button
+        type="button"
+        class="flex h-10 w-10 cursor-pointer items-center justify-center rounded border-0 bg-transparent text-white"
+        [attr.aria-label]="'app.nav.close' | translate"
+        (click)="closeMenu()"
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+      </button>
+    </div>
+    <nav class="flex-1" [attr.aria-label]="'app.nav.label' | translate">
+      <ul nz-menu nzTheme="dark" nzMode="inline">
+        @for (link of links; track link.path) {
+          <li nz-menu-item nzMatchRouter [routerLink]="link.path" (click)="closeMenu()">
+            {{ link.label | translate }}
+          </li>
+        }
+      </ul>
+    </nav>
+  </div>
+</dialog>
