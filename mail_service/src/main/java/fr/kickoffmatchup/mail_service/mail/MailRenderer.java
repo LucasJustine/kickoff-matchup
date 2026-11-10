@@ -42,7 +42,7 @@ public class MailRenderer {
         return frontendUrl + path + "?token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
     }
 
-    public String name(MailMessage message) {
-        return message.firstName() == null ? "" : message.firstName();
+    public String name(String firstName) {
+        return firstName == null ? "" : firstName;
     }
 }

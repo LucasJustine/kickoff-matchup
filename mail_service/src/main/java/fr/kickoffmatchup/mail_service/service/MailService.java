@@ -8,17 +8,20 @@ import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 
-/** N'envoie que : le contenu est construit par le {@link MailBuilder} du type, choisi par la {@link MailFactory}. */
 @Service
 public class MailService {
 
     private static final Logger log = LoggerFactory.getLogger(MailService.class);
+
+    private static final String LOGO_CID = "logo";
+    private static final ClassPathResource LOGO = new ClassPathResource("templates/assets/icon.png");
 
     private final JavaMailSender sender;
     private final MailFactory factory;
@@ -35,16 +38,19 @@ public class MailService {
 
         try {
             MimeMessage mime = sender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mime, false, StandardCharsets.UTF_8.name());
+            MimeMessageHelper helper = new MimeMessageHelper(mime, true, StandardCharsets.UTF_8.name());
             helper.setFrom(from);
             helper.setTo(message.to());
             helper.setSubject(content.subject());
             helper.setText(content.body(), content.html());
+            if (content.html()) {
+                helper.addInline(LOGO_CID, LOGO, "image/png");
+            }
             sender.send(mime);
         } catch (MessagingException e) {
-            throw new IllegalStateException("Impossible de construire l'email " + message.type(), e);
+            throw new IllegalStateException("Impossible de construire l'email " + message.getClass().getSimpleName(), e);
         }
 
-        log.info("Email {} envoyé", message.type());
+        log.info("Email {} envoyé", message.getClass().getSimpleName());
     }
 }
