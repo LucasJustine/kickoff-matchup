@@ -11,7 +11,6 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { TranslatePipe } from '@ngx-translate/core';
-import { finalize } from 'rxjs';
 import { AuthControllerService, UserDto } from '../../api-auth';
 import { handleApiError, injectFieldError, sameAs } from '../../api-auth/auth-shared';
 import { SessionService } from '../../services/session.service';
@@ -49,14 +48,20 @@ export class Profile implements OnInit {
         return `${u?.firstName?.[0] ?? ''}${u?.lastName?.[0] ?? ''}`.toUpperCase() || '?';
     });
 
-    // Double authentification
+    protected readonly savingIdentity = signal(false);
+    protected readonly identityInfo = signal('');
+    protected readonly identityError = signal('');
+    protected readonly identityForm = this.fb.group({
+        firstName: ['', [Validators.required, Validators.maxLength(100)]],
+        lastName: ['', [Validators.required, Validators.maxLength(100)]],
+    });
+
     protected readonly savingMfa = signal(false);
     protected readonly mfaModalOpen = signal(false);
+    protected readonly mfaModalError = signal('');
     protected readonly mfaForm = this.fb.group({ password: ['', Validators.required] });
 
-    // Mot de passe
     protected readonly savingPassword = signal(false);
-    protected readonly passwordInfo = signal('');
     protected readonly passwordError = signal('');
     protected readonly passwordForm = this.fb.group({
         currentPassword: ['', Validators.required],
@@ -64,15 +69,14 @@ export class Profile implements OnInit {
         confirm: ['', [Validators.required, sameAs('newPassword')]],
     });
 
-    // Suppression du compte
     protected readonly deleteModalOpen = signal(false);
     protected readonly deleting = signal(false);
+    protected readonly deleteError = signal('');
     protected readonly deleteForm = this.fb.group({ password: ['', Validators.required] });
 
     protected readonly loggingOut = signal(false);
 
     constructor() {
-        // « confirm » dépend de « newPassword » : on le revalide quand celui-ci change.
         this.passwordForm.controls.newPassword.valueChanges
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(() => this.passwordForm.controls.confirm.updateValueAndValidity());
@@ -81,7 +85,7 @@ export class Profile implements OnInit {
     ngOnInit(): void {
         this.api.me().subscribe({
             next: (user: UserDto) => {
-                this.user.set(user);
+                this.setUser(user);
                 this.loading.set(false);
             },
             error: (e: unknown) => {
@@ -91,10 +95,28 @@ export class Profile implements OnInit {
         });
     }
 
-    /** Activer : un clic. Désactiver : le mot de passe est demandé dans une modale. */
+    protected saveIdentity(): void {
+        if (this.identityForm.invalid) return this.identityForm.markAllAsTouched();
+        this.savingIdentity.set(true);
+        this.identityInfo.set('');
+        this.identityError.set('');
+        this.api.updateProfile(this.identityForm.getRawValue()).subscribe({
+            next: (user) => {
+                this.setUser(user);
+                this.savingIdentity.set(false);
+                this.identityInfo.set('profile.identity.saved');
+            },
+            error: (e) => {
+                this.savingIdentity.set(false);
+                this.identityError.set(handleApiError(this.identityForm, e));
+            },
+        });
+    }
+
     protected toggleMfa(enable: boolean): void {
         if (!enable) {
             this.mfaForm.reset();
+            this.mfaModalError.set('');
             this.mfaModalOpen.set(true);
             return;
         }
@@ -113,17 +135,17 @@ export class Profile implements OnInit {
     private updateMfa(enabled: boolean, currentPassword?: string): void {
         this.savingMfa.set(true);
         this.error.set('');
+        this.mfaModalError.set('');
         this.api.setMfa({ enabled, currentPassword }).subscribe({
             next: (user) => {
-                this.user.set(user);
+                this.setUser(user);
                 this.savingMfa.set(false);
                 this.mfaModalOpen.set(false);
             },
             error: (e) => {
                 this.savingMfa.set(false);
                 if (this.mfaModalOpen()) {
-                    // Le message s'affiche sous le champ mot de passe de la modale.
-                    handleApiError(this.mfaForm, e);
+                    this.mfaModalError.set(handleApiError(this.mfaForm, e));
                 } else {
                     this.error.set(handleApiError(new FormGroup({}), e));
                 }
@@ -133,19 +155,21 @@ export class Profile implements OnInit {
 
     protected changePassword(): void {
         if (this.passwordForm.invalid) return this.passwordForm.markAllAsTouched();
-        this.passwordInfo.set('');
         this.passwordError.set('');
         this.savingPassword.set(true);
-        // TODO: brancher l'endpoint « changer le mot de passe » quand l'auth-server l'exposera.
-        // Envoyer { currentPassword, newPassword } (this.passwordForm.getRawValue()), puis :
-        //   next  -> this.passwordForm.reset(); this.passwordInfo.set('profile.password.changed');
-        //   error -> this.passwordError.set(handleApiError(this.passwordForm, e));
-        this.savingPassword.set(false);
-        this.passwordError.set('profile.password.unavailable');
+        const { currentPassword, newPassword } = this.passwordForm.getRawValue();
+        this.api.changePassword({ currentPassword, newPassword }).subscribe({
+            next: () => this.leave(['/auth/login'], { info: 'password-changed' }),
+            error: (e) => {
+                this.savingPassword.set(false);
+                this.passwordError.set(handleApiError(this.passwordForm, e));
+            },
+        });
     }
 
     protected openDeleteModal(): void {
         this.deleteForm.reset();
+        this.deleteError.set('');
         this.deleteModalOpen.set(true);
     }
 
@@ -155,25 +179,29 @@ export class Profile implements OnInit {
 
     protected deleteAccount(): void {
         if (this.deleteForm.invalid) return this.deleteForm.markAllAsTouched();
-        // TODO: brancher l'endpoint « supprimer le compte » quand l'auth-server l'exposera.
-        // Envoyer { password } (this.deleteForm.getRawValue()), puis this.session.clear() et
-        // this.router.navigate(['/auth/login']).
-        this.deleting.set(false);
-        this.deleteModalOpen.set(false);
-        this.error.set('profile.delete.unavailable');
+        this.deleting.set(true);
+        this.deleteError.set('');
+        this.api.deleteAccount({ currentPassword: this.deleteForm.getRawValue().password }).subscribe({
+            next: () => this.leave(['/welcome']),
+            error: (e) => {
+                this.deleting.set(false);
+                this.deleteError.set(handleApiError(this.deleteForm, e));
+            },
+        });
     }
 
     protected logout(): void {
         this.loggingOut.set(true);
-        this.api
-            .logout()
-            .pipe(
-                finalize(() => {
-                    this.loggingOut.set(false);
-                    this.session.clear();
-                    this.router.navigate(['/auth/login']);
-                }),
-            )
-            .subscribe({ error: () => undefined });
+        this.leave(['/auth/login']);
+    }
+
+    private leave(commands: string[], queryParams?: Record<string, string>): void {
+        this.session.logout().subscribe(() => this.router.navigate(commands, { queryParams }));
+    }
+
+    private setUser(user: UserDto): void {
+        this.user.set(user);
+        this.session.setUser(user);
+        this.identityForm.reset({ firstName: user.firstName ?? '', lastName: user.lastName ?? '' });
     }
 }

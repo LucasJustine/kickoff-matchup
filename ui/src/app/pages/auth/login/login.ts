@@ -6,7 +6,7 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { TranslatePipe } from '@ngx-translate/core';
-import { AuthControllerService, LoginResponse } from '../../../api-auth';
+import { AuthControllerService, LoginResponse, UserDto } from '../../../api-auth';
 import { handleApiError, injectFieldError, toApiError } from '../../../api-auth/auth-shared';
 import { ProvidersService } from '../../../services/providers.service';
 import { DEFAULT_URL, sanitizeReturnUrl } from '../../../utils/sanitize';
@@ -54,6 +54,9 @@ export class Login implements OnInit, OnDestroy {
 
         const errorCode = this.route.snapshot.queryParamMap.get('error');
         if (errorCode) this.error.set(handleApiError(this.form, { code: errorCode }));
+        if (this.route.snapshot.queryParamMap.get('info') === 'password-changed') {
+            this.info.set('auth.login.passwordChanged');
+        }
     }
 
     protected loginWithProvider(provider: { loginUrl: string }): void {
@@ -75,7 +78,7 @@ export class Login implements OnInit, OnDestroy {
                     this.resendsExhausted.set(false);
                     this.startCountdown();
                 } else {
-                    this.success();
+                    this.success(res.user);
                 }
             },
             error: (e) => this.fail(this.form, e),
@@ -88,7 +91,7 @@ export class Login implements OnInit, OnDestroy {
         this.api
             .verifyMfa({ challengeId: this.challengeId()!, code: this.mfaForm.getRawValue().code })
             .subscribe({
-                next: () => this.success(),
+                next: (res) => this.success(res.user),
                 error: (e) => {
                     const code = toApiError(e).code;
                     if (code === 'MFA_CHALLENGE_EXPIRED') {
@@ -102,7 +105,6 @@ export class Login implements OnInit, OnDestroy {
     resendMfa(): void {
         if (this.resendIn() > 0 || this.resendsExhausted() || !this.challengeId()) return;
         this.begin();
-        this.info.set('');
         this.api.resendMfa({ challengeId: this.challengeId()! }).subscribe({
             next: () => {
                 this.loading.set(false);
@@ -144,6 +146,7 @@ export class Login implements OnInit, OnDestroy {
     private begin(): void {
         this.loading.set(true);
         this.error.set('');
+        this.info.set('');
         this.emailNotVerified.set(false);
     }
 
@@ -154,9 +157,9 @@ export class Login implements OnInit, OnDestroy {
     }
 
     /** La session est posée par le gateway (cookie) : on retourne là où l'utilisateur voulait aller. */
-    private success(): void {
+    private success(user?: UserDto): void {
         this.loading.set(false);
-        this.session.markAuthenticated();
+        this.session.markAuthenticated(user);
         this.router.navigateByUrl(this.returnUrl ?? DEFAULT_URL);
     }
 }

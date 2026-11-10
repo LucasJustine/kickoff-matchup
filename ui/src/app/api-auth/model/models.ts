@@ -1,4 +1,6 @@
 export * from './authResult';
+export * from './changePasswordRequest';
+export * from './deleteAccountRequest';
 export * from './emailRequest';
 export * from './loginRequest';
 export * from './loginResponse';
@@ -10,4 +12,5 @@ export * from './registerRequest';
 export * from './resetPasswordRequest';
 export * from './tokenPair';
 export * from './tokenRequest';
+export * from './updateProfileRequest';
 export * from './userDto';

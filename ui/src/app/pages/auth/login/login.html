@@ -5,8 +5,11 @@
     @if (error()) {
       <nz-alert nzType="error" nzShowIcon [nzMessage]="error() | translate" />
     }
+    @if (info()) {
+      <nz-alert class="mb-4 block" nzType="success" nzShowIcon [nzMessage]="info() | translate" />
+    }
     @if (emailNotVerified()) {
-      <p><a routerLink="/resend-verification">{{ 'auth.login.resendVerification' | translate }}</a></p>
+      <p><a routerLink="/auth/resend-verification">{{ 'auth.login.resendVerification' | translate }}</a></p>
     }
 
     @if (!challengeId()) {
@@ -73,10 +76,6 @@
           {{ 'auth.mfa.submit' | translate }}
         </button>
       </form>
-
-      @if (info()) {
-        <nz-alert class="mt-4 block" nzType="success" nzShowIcon [nzMessage]="info() | translate" />
-      }
 
       <div class="mt-4 flex flex-col items-center gap-2">
         @if (resendsExhausted()) {

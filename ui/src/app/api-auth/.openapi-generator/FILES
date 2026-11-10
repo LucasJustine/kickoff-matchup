@@ -9,6 +9,8 @@ encoder.ts
 git_push.sh
 index.ts
 model/authResult.ts
+model/changePasswordRequest.ts
+model/deleteAccountRequest.ts
 model/emailRequest.ts
 model/loginRequest.ts
 model/loginResponse.ts
@@ -21,6 +23,7 @@ model/registerRequest.ts
 model/resetPasswordRequest.ts
 model/tokenPair.ts
 model/tokenRequest.ts
+model/updateProfileRequest.ts
 model/userDto.ts
 param.ts
 provide-api.ts

@@ -8,13 +8,38 @@
   @if (user(); as u) {
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <nz-card class="md:col-span-2" [nzTitle]="'profile.identity.title' | translate">
-        <div class="flex items-center gap-4">
+        <div class="mb-4 flex items-center gap-4">
           <nz-avatar [nzSize]="64" [nzText]="initials()" />
-          <div>
+          <div class="min-w-0">
             <div class="text-lg font-semibold">{{ u.firstName }} {{ u.lastName }}</div>
-            <div>{{ u.email }}</div>
+            <div class="break-all">{{ u.email }}</div>
           </div>
         </div>
+        @if (identityInfo()) {
+          <nz-alert class="block mb-4" nzType="success" nzShowIcon [nzMessage]="identityInfo() | translate" />
+        }
+        @if (identityError()) {
+          <nz-alert class="block mb-4" nzType="error" nzShowIcon [nzMessage]="identityError() | translate" />
+        }
+        <form nz-form nzLayout="vertical" [formGroup]="identityForm" (ngSubmit)="saveIdentity()">
+          <div class="grid grid-cols-1 gap-x-4 md:grid-cols-2">
+            <nz-form-item>
+              <nz-form-label nzFor="firstName">{{ 'common.firstName' | translate }}</nz-form-label>
+              <nz-form-control [nzErrorTip]="fieldError(identityForm.controls.firstName)">
+                <input nz-input id="firstName" formControlName="firstName" autocomplete="given-name" />
+              </nz-form-control>
+            </nz-form-item>
+            <nz-form-item>
+              <nz-form-label nzFor="lastName">{{ 'common.lastName' | translate }}</nz-form-label>
+              <nz-form-control [nzErrorTip]="fieldError(identityForm.controls.lastName)">
+                <input nz-input id="lastName" formControlName="lastName" autocomplete="family-name" />
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+          <button nz-button nzType="primary" type="submit" [nzLoading]="savingIdentity()" [disabled]="identityForm.pristine">
+            {{ 'common.save' | translate }}
+          </button>
+        </form>
       </nz-card>
 
       <nz-card [nzTitle]="'profile.mfa.title' | translate">
@@ -38,9 +63,7 @@
       </nz-card>
 
       <nz-card [nzTitle]="'profile.password.title' | translate">
-        @if (passwordInfo()) {
-          <nz-alert class="block mb-4" nzType="success" nzShowIcon [nzMessage]="passwordInfo() | translate" />
-        }
+        <p>{{ 'profile.password.hint' | translate }}</p>
         @if (passwordError()) {
           <nz-alert class="block mb-4" nzType="error" nzShowIcon [nzMessage]="passwordError() | translate" />
         }
@@ -95,6 +118,9 @@
       (nzOnCancel)="cancelDisableMfa()"
     >
       <ng-container *nzModalContent>
+        @if (mfaModalError()) {
+          <nz-alert class="block mb-4" nzType="error" nzShowIcon [nzMessage]="mfaModalError() | translate" />
+        }
         <form nz-form nzLayout="vertical" [formGroup]="mfaForm" (ngSubmit)="confirmDisableMfa()">
           <nz-form-item>
             <nz-form-label nzFor="mfaPassword">{{ 'common.password' | translate }}</nz-form-label>
@@ -120,6 +146,9 @@
     >
       <ng-container *nzModalContent>
         <p>{{ 'profile.delete.confirmPrompt' | translate }}</p>
+        @if (deleteError()) {
+          <nz-alert class="block mb-4" nzType="error" nzShowIcon [nzMessage]="deleteError() | translate" />
+        }
         <form nz-form nzLayout="vertical" [formGroup]="deleteForm" (ngSubmit)="deleteAccount()">
           <nz-form-item>
             <nz-form-label nzFor="deletePassword">{{ 'common.password' | translate }}</nz-form-label>

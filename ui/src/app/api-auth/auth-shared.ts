@@ -26,6 +26,14 @@ const KNOWN_CODES = new Set([
     'INVALID_SOCIAL_TOKEN',
     'OAUTH_EMAIL_NOT_VERIFIED',
     'SOCIAL_PROVIDER_UNAVAILABLE',
+    'INVALID_CURRENT_PASSWORD',
+    'PASSWORD_REQUIRED_FOR_MFA',
+    'VALIDATION_ERROR',
+    'TOO_MANY_REQUESTS',
+    'MAIL_QUEUE_UNAVAILABLE',
+    'AUTH_SERVER_UNAVAILABLE',
+    'AUTH_SERVER_ERROR',
+    'NETWORK_ERROR',
 ]);
 
 export function toApiError(err: unknown): ApiError {
@@ -50,10 +58,6 @@ export function handleApiError(form: FormGroup, err: unknown): string {
     return e.message || 'errors.generic';
 }
 
-/**
- * Renvoie une fonction « message d'erreur d'un champ » traduit, vide tant que le champ n'a pas été touché.
- * À appeler dans un contexte d'injection : `protected readonly fieldError = injectFieldError();`
- */
 export function injectFieldError(): (c: AbstractControl | null) => string {
     const translate = inject(TranslateService);
     return (c) => {
