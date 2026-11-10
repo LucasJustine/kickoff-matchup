@@ -28,6 +28,11 @@ public class VerificationTokenService {
         return create(user, type, ttl, null);
     }
 
+    @Transactional
+    public void deleteAll(User user) {
+        repository.deleteAllForUser(user);
+    }
+
     @Transactional(readOnly = true)
     public String latestPendingPasswordHash(User user, TokenType type) {
         return repository.findFirstByUserAndTypeOrderByIdDesc(user, type)

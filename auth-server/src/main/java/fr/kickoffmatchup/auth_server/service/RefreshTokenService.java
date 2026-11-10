@@ -72,6 +72,11 @@ public class RefreshTokenService {
         repository.revokeAllForUser(user, Instant.now());
     }
 
+    @Transactional
+    public void deleteAll(User user) {
+        repository.deleteAllForUser(user);
+    }
+
     private String createInFamily(User user, String familyId) {
         byte[] bytes = new byte[32];
         random.nextBytes(bytes);

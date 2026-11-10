@@ -29,5 +29,15 @@ public final class AuthDtos {
 
     public record MfaToggleRequest(boolean enabled, @Size(max = 72) String currentPassword) {}
 
+    public record UpdateProfileRequest(
+            @NotBlank @Size(max = 100) String firstName,
+            @NotBlank @Size(max = 100) String lastName) {}
+
+    public record ChangePasswordRequest(
+            @Size(max = 72) String currentPassword,
+            @NotBlank @Size(min = 8, max = 72) String newPassword) {}
+
+    public record DeleteAccountRequest(@Size(max = 72) String currentPassword) {}
+
 
 }

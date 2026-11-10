@@ -113,6 +113,25 @@ public class AuthController {
         return UserDto.from(current(jwt));
     }
 
+    @PutMapping("/me")
+    public UserDto updateProfile(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody UpdateProfileRequest body) {
+        return UserDto.from(authService.updateProfile(current(jwt), body.firstName(), body.lastName()));
+    }
+
+    @PostMapping("/me/password")
+    public ResponseEntity<Void> changePassword(@AuthenticationPrincipal Jwt jwt,
+                                               @Valid @RequestBody ChangePasswordRequest body) {
+        authService.changePassword(current(jwt), body.currentPassword(), body.newPassword());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/me/delete")
+    public ResponseEntity<Void> deleteAccount(@AuthenticationPrincipal Jwt jwt,
+                                              @Valid @RequestBody DeleteAccountRequest body) {
+        authService.deleteAccount(current(jwt), body.currentPassword());
+        return ResponseEntity.noContent().build();
+    }
+
     @PutMapping("/me/mfa")
     public UserDto setMfa(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody MfaToggleRequest body) {
         return UserDto.from(authService.setMfa(current(jwt), body.enabled(), body.currentPassword()));

@@ -6,6 +6,7 @@ import fr.kickoffmatchup.auth_server.exception.ApiException;
 import fr.kickoffmatchup.auth_server.mail.EmailService;
 import fr.kickoffmatchup.auth_server.model.User;
 import fr.kickoffmatchup.auth_server.model.VerificationToken;
+import fr.kickoffmatchup.auth_server.repository.UserIdentityRepository;
 import fr.kickoffmatchup.auth_server.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class AuthService {
     private final VerificationTokenService tokens;
     private final EmailService emails;
     private final RefreshTokenService refreshTokens;
+    private final UserIdentityRepository identities;
 
     private String dummyHash;
 
@@ -114,6 +116,37 @@ public class AuthService {
         }
         user.setMfaEnabled(enabled);
         return users.save(user);
+    }
+
+    @Transactional
+    public User updateProfile(User user, String firstName, String lastName) {
+        user.setFirstName(firstName.trim());
+        user.setLastName(lastName.trim());
+        return users.save(user);
+    }
+
+    @Transactional
+    public void changePassword(User user, String currentPassword, String newPassword) {
+        requireCurrentPassword(user, currentPassword);
+        user.setPassword(encoder.encode(newPassword));
+        users.save(user);
+        refreshTokens.revokeAll(user);
+    }
+
+    @Transactional
+    public void deleteAccount(User user, String currentPassword) {
+        requireCurrentPassword(user, currentPassword);
+        refreshTokens.deleteAll(user);
+        tokens.deleteAll(user);
+        identities.deleteAllForUser(user);
+        users.delete(user);
+    }
+
+    private void requireCurrentPassword(User user, String currentPassword) {
+        if (user.getPassword() != null
+                && (currentPassword == null || !encoder.matches(currentPassword, user.getPassword()))) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "INVALID_CURRENT_PASSWORD");
+        }
     }
 
     @Transactional
