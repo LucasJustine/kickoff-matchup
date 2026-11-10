@@ -2,12 +2,13 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthControllerService } from '../../../api-auth';
 import { handleApiError } from '../../../api-auth/auth-shared';
 
 @Component({
     selector: 'app-verify-email',
-    imports: [RouterLink, NzAlertModule],
+    imports: [RouterLink, NzAlertModule, TranslatePipe],
     templateUrl: './verify-email.html',
 })
 export class VerifyEmail implements OnInit {
@@ -20,7 +21,7 @@ export class VerifyEmail implements OnInit {
 
     ngOnInit(): void {
         if (!this.token) {
-            this.error.set('Lien invalide.');
+            this.error.set('errors.invalidLink');
             this.status.set('error');
             return;
         }

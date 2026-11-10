@@ -1,12 +1,12 @@
 <div class="flex flex-col items-center justify-center">
-  <h2>Connexion</h2>
+  <h2>{{ 'auth.login.title' | translate }}</h2>
 
   <div class="max-w-md w-full">
     @if (error()) {
-      <nz-alert nzType="error" nzShowIcon [nzMessage]="error()" />
+      <nz-alert nzType="error" nzShowIcon [nzMessage]="error() | translate" />
     }
     @if (emailNotVerified()) {
-      <p><a routerLink="/resend-verification">Renvoyer l'email de confirmation</a></p>
+      <p><a routerLink="/resend-verification">{{ 'auth.login.resendVerification' | translate }}</a></p>
     }
 
     @if (!challengeId()) {
@@ -16,7 +16,7 @@
         <div class="mt-4">
             <form nz-form nzLayout="vertical" [formGroup]="form" (ngSubmit)="submit()">
             <nz-form-item>
-                <nz-form-label nzFor="email">Email</nz-form-label>
+                <nz-form-label nzFor="email">{{ 'common.email' | translate }}</nz-form-label>
                 <nz-form-control [nzErrorTip]="fieldError(form.controls.email)">
                 <input
                     nz-input
@@ -29,7 +29,7 @@
             </nz-form-item>
 
             <nz-form-item>
-                <nz-form-label nzFor="password">Mot de passe</nz-form-label>
+                <nz-form-label nzFor="password">{{ 'common.password' | translate }}</nz-form-label>
                 <nz-form-control [nzErrorTip]="fieldError(form.controls.password)">
                 <input
                     nz-input
@@ -42,21 +42,21 @@
             </nz-form-item>
 
             <button nz-button nzType="primary" nzBlock type="submit" [nzLoading]="loading()">
-                Se connecter
+                {{ 'auth.login.submit' | translate }}
             </button>
             </form>
         </div>
 
-      <p><a routerLink="/forgot-password">Mot de passe oublié ?</a></p>
+      <p><a routerLink="/forgot-password">{{ 'auth.login.forgotPassword' | translate }}</a></p>
       <p>
-        Pas encore de compte ?
-        <a routerLink="/auth/register" queryParamsHandling="preserve">Créer un compte</a>
+        {{ 'auth.login.noAccount' | translate }}
+        <a routerLink="/auth/register" queryParamsHandling="preserve">{{ 'auth.login.createAccount' | translate }}</a>
       </p>
     } @else {
-      <p>Un code à 6 chiffres vient de vous être envoyé par email (valable 5 minutes).</p>
+      <p>{{ 'auth.mfa.intro' | translate }}</p>
       <form nz-form nzLayout="vertical" [formGroup]="mfaForm" (ngSubmit)="submitMfa()">
         <nz-form-item>
-          <nz-form-label nzFor="code">Code</nz-form-label>
+          <nz-form-label nzFor="code">{{ 'auth.mfa.code' | translate }}</nz-form-label>
           <nz-form-control [nzErrorTip]="fieldError(mfaForm.controls.code)">
             <input
               nz-input
@@ -70,17 +70,17 @@
         </nz-form-item>
 
         <button nz-button nzType="primary" nzBlock type="submit" [nzLoading]="loading()">
-          Valider
+          {{ 'auth.mfa.submit' | translate }}
         </button>
       </form>
 
       @if (info()) {
-        <nz-alert class="mt-4 block" nzType="success" nzShowIcon [nzMessage]="info()" />
+        <nz-alert class="mt-4 block" nzType="success" nzShowIcon [nzMessage]="info() | translate" />
       }
 
       <div class="mt-4 flex flex-col items-center gap-2">
         @if (resendsExhausted()) {
-          <a href="#" (click)="$event.preventDefault(); leaveMfa()">Revenir à la connexion</a>
+          <a href="#" (click)="$event.preventDefault(); leaveMfa()">{{ 'auth.mfa.backToLogin' | translate }}</a>
         } @else {
           <button
             nz-button
@@ -90,7 +90,11 @@
             [disabled]="resendIn() > 0 || loading()"
             (click)="resendMfa()"
           >
-            Renvoyer le code @if (resendIn() > 0) { ({{ resendIn() }} s) }
+            @if (resendIn() > 0) {
+              {{ 'auth.mfa.resendCountdown' | translate: { seconds: resendIn() } }}
+            } @else {
+              {{ 'auth.mfa.resend' | translate }}
+            }
           </button>
         }
       </div>

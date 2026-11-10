@@ -5,19 +5,20 @@ import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthControllerService } from '../../../api-auth';
-import { fieldError, handleApiError, sameAs } from '../../../api-auth/auth-shared';
+import { handleApiError, injectFieldError, sameAs } from '../../../api-auth/auth-shared';
 
 @Component({
     selector: 'app-register',
-    imports: [ReactiveFormsModule, RouterLink, NzAlertModule, NzButtonModule, NzFormModule, NzInputModule],
+    imports: [ReactiveFormsModule, RouterLink, NzAlertModule, NzButtonModule, NzFormModule, NzInputModule, TranslatePipe],
     templateUrl: './register.html',
 })
 export class Register {
     private readonly fb = inject(NonNullableFormBuilder);
     private readonly api = inject(AuthControllerService);
 
-    protected readonly fieldError = fieldError;
+    protected readonly fieldError = injectFieldError();
     protected readonly loading = signal(false);
     protected readonly error = signal('');
     protected readonly sent = signal(false);

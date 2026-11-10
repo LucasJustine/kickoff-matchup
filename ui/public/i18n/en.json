@@ -1,0 +1,135 @@
+{
+  "app": {
+    "title": "Kickoff Matchup",
+    "nav": { "home": "Home", "login": "Sign in", "profile": "Profile", "label": "Main navigation", "open": "Open menu", "close": "Close menu" }
+  },
+  "common": {
+    "email": "Email",
+    "password": "Password",
+    "loading": "Loading…",
+    "cancel": "Cancel",
+    "backToLogin": "Back to sign in",
+    "signIn": "Sign in"
+  },
+  "validation": {
+    "required": "Required field",
+    "email": "Invalid email",
+    "minlength": "Minimum {{count}} characters",
+    "maxlength": "Maximum {{count}} characters",
+    "pattern": "Invalid format",
+    "mismatch": "Passwords do not match",
+    "invalid": "Invalid value"
+  },
+  "errors": {
+    "generic": "Something went wrong.",
+    "invalidLink": "Invalid link.",
+    "INVALID_CREDENTIALS": "Incorrect email or password.",
+    "EMAIL_NOT_VERIFIED": "Your email isn't verified yet.",
+    "INVALID_TOKEN": "This link is invalid, expired or already used.",
+    "MFA_INVALID_CODE": "Incorrect code.",
+    "MFA_CODE_EXPIRED": "This code has expired. Request a new one.",
+    "MFA_TOO_MANY_ATTEMPTS": "Too many attempts. Request a new code.",
+    "MFA_RESEND_TOO_SOON": "Wait a few seconds before requesting a new code.",
+    "MFA_TOO_MANY_RESENDS": "Maximum number of resends reached. Sign in again.",
+    "MFA_CHALLENGE_EXPIRED": "Verification has expired. Sign in again.",
+    "INVALID_REFRESH_TOKEN": "Session expired. Sign in again.",
+    "UNAUTHENTICATED": "Session expired. Sign in again.",
+    "UNSUPPORTED_PROVIDER": "Unsupported sign-in provider.",
+    "INVALID_SOCIAL_TOKEN": "Sign-in through the provider was refused.",
+    "OAUTH_EMAIL_NOT_VERIFIED": "Your account email isn't verified with the provider.",
+    "SOCIAL_PROVIDER_UNAVAILABLE": "Provider unavailable, try again later."
+  },
+  "auth": {
+    "continueWith": "Continue with",
+    "login": {
+      "title": "Sign in",
+      "submit": "Sign in",
+      "forgotPassword": "Forgot your password?",
+      "noAccount": "Don't have an account yet?",
+      "createAccount": "Create an account",
+      "resendVerification": "Resend the confirmation email"
+    },
+    "mfa": {
+      "intro": "A 6-digit code has just been sent to you by email (valid for 5 minutes).",
+      "code": "Code",
+      "submit": "Verify",
+      "resend": "Resend code",
+      "resendCountdown": "Resend code ({{seconds}} s)",
+      "resent": "A new code has been sent to you. The previous one is no longer valid.",
+      "backToLogin": "Back to sign in"
+    },
+    "register": {
+      "title": "Create an account",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "confirmPassword": "Confirm password",
+      "submit": "Create my account",
+      "sentTitle": "Almost done!",
+      "sentDescription": "If this address can be used, a confirmation email has just been sent (link valid for 24 h).",
+      "emailNotReceived": "Didn't get the email?",
+      "alreadyRegistered": "Already registered?"
+    },
+    "forgot": {
+      "title": "Forgot password",
+      "hint": "Enter your email to receive a reset link.",
+      "button": "Send link",
+      "done": "If an account exists for this address, a reset email has just been sent (link valid for 1 h)."
+    },
+    "resendVerification": {
+      "title": "Resend the confirmation email",
+      "hint": "Enter the email you signed up with.",
+      "button": "Resend",
+      "done": "If this account exists and isn't verified yet, a new email has just been sent (link valid for 24 h)."
+    },
+    "reset": {
+      "title": "New password",
+      "newPassword": "New password",
+      "confirm": "Confirm",
+      "submit": "Change password",
+      "doneTitle": "Password changed",
+      "doneDescription": "All your sessions have been signed out. You can sign in again.",
+      "requestNewLink": "Request a new link"
+    },
+    "verify": {
+      "title": "Email confirmation",
+      "checking": "Verifying…",
+      "ok": "Email confirmed, your account is active.",
+      "newLink": "Get a new link"
+    }
+  },
+  "profile": {
+    "title": "My profile",
+    "identity": { "title": "Personal information" },
+    "mfa": {
+      "title": "Two-factor authentication",
+      "description": "A 6-digit code is emailed to you at each sign-in.",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "enable": "Enable two-factor authentication",
+      "disable": "Disable two-factor authentication",
+      "disableConfirm": "Disable"
+    },
+    "password": {
+      "title": "Password",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "submit": "Change password",
+      "unavailable": "Changing your password isn't available yet.",
+      "changed": "Password changed."
+    },
+    "session": {
+      "title": "Session",
+      "description": "You will be signed out of this device.",
+      "logout": "Sign out"
+    },
+    "delete": {
+      "title": "Delete my account",
+      "description": "This can't be undone: your account and data will be deleted.",
+      "button": "Delete my account",
+      "confirmPrompt": "Enter your password to confirm the deletion.",
+      "confirm": "Delete permanently",
+      "unavailable": "Account deletion isn't available yet."
+    }
+  }
+}

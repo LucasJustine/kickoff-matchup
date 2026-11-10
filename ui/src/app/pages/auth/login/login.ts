@@ -5,8 +5,9 @@ import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthControllerService, LoginResponse } from '../../../api-auth';
-import { fieldError, handleApiError, toApiError } from '../../../api-auth/auth-shared';
+import { handleApiError, injectFieldError, toApiError } from '../../../api-auth/auth-shared';
 import { ProvidersService } from '../../../services/providers.service';
 import { DEFAULT_URL, sanitizeReturnUrl } from '../../../utils/sanitize';
 import { SessionService } from '../../../services/session.service';
@@ -14,7 +15,7 @@ import { SocialLoginButton } from '../../../components/providers-button/social-l
 
 @Component({
     selector: 'app-login',
-    imports: [ReactiveFormsModule, RouterLink, NzAlertModule, NzButtonModule, NzFormModule, NzInputModule, SocialLoginButton],
+    imports: [ReactiveFormsModule, RouterLink, NzAlertModule, NzButtonModule, NzFormModule, NzInputModule, SocialLoginButton, TranslatePipe],
     templateUrl: './login.html',
 })
 export class Login implements OnInit, OnDestroy {
@@ -29,7 +30,7 @@ export class Login implements OnInit, OnDestroy {
     private readonly returnUrl = sanitizeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'));
 
     protected readonly providers = this.providersService.providers;
-    protected readonly fieldError = fieldError;
+    protected readonly fieldError = injectFieldError();
     protected readonly loading = signal(false);
     protected readonly error = signal('');
     protected readonly emailNotVerified = signal(false);
@@ -106,7 +107,7 @@ export class Login implements OnInit, OnDestroy {
             next: () => {
                 this.loading.set(false);
                 this.mfaForm.reset();
-                this.info.set('Un nouveau code vient de vous être envoyé. Le précédent n’est plus valable.');
+                this.info.set('auth.mfa.resent');
                 this.startCountdown();
             },
             error: (e) => {

@@ -1,5 +1,7 @@
 import {
     ApplicationConfig,
+    provideAppInitializer,
+    inject,
     provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
@@ -10,11 +12,13 @@ import {
     withInterceptors,
 } from '@angular/common/http';
 import { environment } from '../environments/environment';
-import { forkJoin, catchError, throwError, switchMap, from } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { fr_FR, provideNzI18n } from 'ng-zorro-antd/i18n';
 import { registerLocaleData } from '@angular/common';
 import fr from '@angular/common/locales/fr';
 import { provideNzDateFnsAdapter } from 'ng-zorro-antd/core/time';
+import { provideTranslateService, TranslateService } from '@ngx-translate/core';
+import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { provideApi } from './api-auth';
 import { unauthorizedInterceptor } from './interceptors/unauthorized.interceptor';
 import { errorInterceptor } from './interceptors/error.interceptor';
@@ -42,6 +46,10 @@ export const appConfig: ApplicationConfig = {
                 errorInterceptor,
             ]),
         ),
+        provideTranslateService({ lang: 'fr', fallbackLang: 'fr' }),
+        provideTranslateHttpLoader({ prefix: './i18n/', suffix: '.json' }),
+        // Évite d'afficher les clés brutes le temps du chargement du fichier de langue.
+        provideAppInitializer(() => firstValueFrom(inject(TranslateService).use('fr'))),
         provideNzI18n(fr_FR),
         provideNzDateFnsAdapter(),
         provideApi({

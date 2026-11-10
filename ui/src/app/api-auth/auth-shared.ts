@@ -1,5 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { inject } from '@angular/core';
 import { AbstractControl, FormGroup } from '@angular/forms';
+import { TranslateService } from '@ngx-translate/core';
 
 export interface ApiError {
     success?: false;
@@ -8,23 +10,23 @@ export interface ApiError {
     fields?: Record<string, string>;
 }
 
-const MESSAGES: Record<string, string> = {
-    INVALID_CREDENTIALS: 'Email ou mot de passe incorrect.',
-    EMAIL_NOT_VERIFIED: "Votre email n'est pas encore vérifié.",
-    INVALID_TOKEN: 'Ce lien est invalide, expiré ou déjà utilisé.',
-    MFA_INVALID_CODE: 'Code incorrect.',
-    MFA_CODE_EXPIRED: 'Ce code a expiré. Demandez-en un nouveau.',
-    MFA_TOO_MANY_ATTEMPTS: 'Trop de tentatives. Demandez un nouveau code.',
-    MFA_RESEND_TOO_SOON: 'Patientez quelques secondes avant de demander un nouveau code.',
-    MFA_TOO_MANY_RESENDS: 'Nombre maximum de renvois atteint. Reconnectez-vous.',
-    MFA_CHALLENGE_EXPIRED: 'La vérification a expiré. Reconnectez-vous.',
-    INVALID_REFRESH_TOKEN: 'Session expirée. Reconnectez-vous.',
-    UNAUTHENTICATED: 'Session expirée. Reconnectez-vous.',
-    UNSUPPORTED_PROVIDER: 'Fournisseur de connexion non supporté.',
-    INVALID_SOCIAL_TOKEN: 'Connexion via le fournisseur refusée.',
-    OAUTH_EMAIL_NOT_VERIFIED: "L'email de votre compte n'est pas vérifié chez le fournisseur.",
-    SOCIAL_PROVIDER_UNAVAILABLE: 'Fournisseur indisponible, réessayez plus tard.',
-};
+const KNOWN_CODES = new Set([
+    'INVALID_CREDENTIALS',
+    'EMAIL_NOT_VERIFIED',
+    'INVALID_TOKEN',
+    'MFA_INVALID_CODE',
+    'MFA_CODE_EXPIRED',
+    'MFA_TOO_MANY_ATTEMPTS',
+    'MFA_RESEND_TOO_SOON',
+    'MFA_TOO_MANY_RESENDS',
+    'MFA_CHALLENGE_EXPIRED',
+    'INVALID_REFRESH_TOKEN',
+    'UNAUTHENTICATED',
+    'UNSUPPORTED_PROVIDER',
+    'INVALID_SOCIAL_TOKEN',
+    'OAUTH_EMAIL_NOT_VERIFIED',
+    'SOCIAL_PROVIDER_UNAVAILABLE',
+]);
 
 export function toApiError(err: unknown): ApiError {
     const body = err instanceof HttpErrorResponse ? err.error : err;
@@ -44,21 +46,28 @@ export function handleApiError(form: FormGroup, err: unknown): string {
         }
     }
     if (applied) return '';
-    return (e.code && MESSAGES[e.code]) || e.message || 'Une erreur est survenue.';
+    if (e.code && KNOWN_CODES.has(e.code)) return `errors.${e.code}`;
+    return e.message || 'errors.generic';
 }
 
-/** Message d'erreur d'un champ, vide tant que le champ n'a pas été touché. */
-export function fieldError(c: AbstractControl | null): string {
-    const e = c?.errors;
-    if (!c || !e || !(c.dirty || c.touched)) return '';
-    if (e['serverError']) return e['serverError'];
-    if (e['required']) return 'Champ obligatoire';
-    if (e['email']) return 'Email invalide';
-    if (e['minlength']) return `Minimum ${e['minlength'].requiredLength} caractères`;
-    if (e['maxlength']) return `Maximum ${e['maxlength'].requiredLength} caractères`;
-    if (e['pattern']) return 'Format invalide';
-    if (e['mismatch']) return 'Les mots de passe ne correspondent pas';
-    return 'Valeur invalide';
+/**
+ * Renvoie une fonction « message d'erreur d'un champ » traduit, vide tant que le champ n'a pas été touché.
+ * À appeler dans un contexte d'injection : `protected readonly fieldError = injectFieldError();`
+ */
+export function injectFieldError(): (c: AbstractControl | null) => string {
+    const translate = inject(TranslateService);
+    return (c) => {
+        const e = c?.errors;
+        if (!c || !e || !(c.dirty || c.touched)) return '';
+        if (e['serverError']) return e['serverError'];
+        if (e['required']) return translate.instant('validation.required');
+        if (e['email']) return translate.instant('validation.email');
+        if (e['minlength']) return translate.instant('validation.minlength', { count: e['minlength'].requiredLength });
+        if (e['maxlength']) return translate.instant('validation.maxlength', { count: e['maxlength'].requiredLength });
+        if (e['pattern']) return translate.instant('validation.pattern');
+        if (e['mismatch']) return translate.instant('validation.mismatch');
+        return translate.instant('validation.invalid');
+    };
 }
 
 /** Validateur « doit être égal au champ `other` du même groupe ». */

@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { NzButtonModule } from 'ng-zorro-antd/button';
+import { TranslatePipe } from '@ngx-translate/core';
 
 
 @Component({
   selector: 'social-login-button',
-  imports: [NzButtonModule],
+  imports: [NzButtonModule, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     :host {
@@ -53,7 +54,7 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
             </svg>
           }
         }
-        <span>{{ label() }} {{ provider().name }}</span>
+        <span>{{ label() ?? ('auth.continueWith' | translate) }} {{ provider().name }}</span>
       </span>
     </button>
   `,
@@ -61,7 +62,8 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 export class SocialLoginButton {
   /** Seuls id et name sont lus : votre type Provider peut avoir d'autres champs. */
   readonly provider = input.required<{ id: string; name: string }>();
-  readonly label = input('Continuer avec');
+  /** Libellé personnalisé ; par défaut, « Continuer avec » traduit. */
+  readonly label = input<string>();
   readonly disabled = input(false);
 
   /** Émis au clic. Le parent sait déjà quel provider (il est dans son @for). */

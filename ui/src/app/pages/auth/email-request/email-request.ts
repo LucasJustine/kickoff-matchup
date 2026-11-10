@@ -5,29 +5,21 @@ import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthControllerService } from '../../../api-auth';
-import { fieldError, handleApiError } from '../../../api-auth/auth-shared';
+import { handleApiError, injectFieldError } from '../../../api-auth/auth-shared';
 
 type Mode = 'forgot' | 'resend';
 
-const TEXTS: Record<Mode, { title: string; hint: string; button: string; done: string }> = {
-    forgot: {
-        title: 'Mot de passe oublié',
-        hint: 'Saisissez votre email pour recevoir un lien de réinitialisation.',
-        button: 'Envoyer le lien',
-        done: "Si un compte existe pour cette adresse, un email de réinitialisation vient d'être envoyé (lien valable 1 h).",
-    },
-    resend: {
-        title: "Renvoyer l'email de confirmation",
-        hint: "Saisissez l'email utilisé à l'inscription.",
-        button: 'Renvoyer',
-        done: "Si ce compte existe et n'est pas encore vérifié, un nouvel email vient d'être envoyé (lien valable 24 h).",
-    },
+/** Préfixe des clés de traduction (auth.<prefix>.title / hint / button / done) selon la route. */
+const KEY_PREFIX: Record<Mode, string> = {
+    forgot: 'auth.forgot',
+    resend: 'auth.resendVerification',
 };
 
 @Component({
     selector: 'app-email-request',
-    imports: [ReactiveFormsModule, RouterLink, NzAlertModule, NzButtonModule, NzFormModule, NzInputModule],
+    imports: [ReactiveFormsModule, RouterLink, NzAlertModule, NzButtonModule, NzFormModule, NzInputModule, TranslatePipe],
     templateUrl: './email-request.html',
 })
 export class EmailRequest {
@@ -35,8 +27,8 @@ export class EmailRequest {
     private readonly api = inject(AuthControllerService);
     private readonly mode = inject(ActivatedRoute).snapshot.data['mode'] as Mode;
 
-    protected readonly texts = TEXTS[this.mode];
-    protected readonly fieldError = fieldError;
+    protected readonly keyPrefix = KEY_PREFIX[this.mode];
+    protected readonly fieldError = injectFieldError();
     protected readonly loading = signal(false);
     protected readonly error = signal('');
     protected readonly sent = signal(false);

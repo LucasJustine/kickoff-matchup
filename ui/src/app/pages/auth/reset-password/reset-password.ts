@@ -5,12 +5,13 @@ import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthControllerService } from '../../../api-auth';
-import { fieldError, handleApiError, sameAs } from '../../../api-auth/auth-shared';
+import { handleApiError, injectFieldError, sameAs } from '../../../api-auth/auth-shared';
 
 @Component({
     selector: 'app-reset-password',
-    imports: [ReactiveFormsModule, RouterLink, NzAlertModule, NzButtonModule, NzFormModule, NzInputModule],
+    imports: [ReactiveFormsModule, RouterLink, NzAlertModule, NzButtonModule, NzFormModule, NzInputModule, TranslatePipe],
     templateUrl: './reset-password.html',
 })
 export class ResetPassword {
@@ -19,7 +20,7 @@ export class ResetPassword {
     /** Lien reçu par email : /reset-password?token=... */
     protected readonly token = inject(ActivatedRoute).snapshot.queryParamMap.get('token');
 
-    protected readonly fieldError = fieldError;
+    protected readonly fieldError = injectFieldError();
     protected readonly loading = signal(false);
     protected readonly error = signal('');
     protected readonly done = signal(false);

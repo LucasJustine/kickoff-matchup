@@ -1,0 +1,135 @@
+{
+  "app": {
+    "title": "Kickoff Matchup",
+    "nav": { "home": "Accueil", "login": "Connexion", "profile": "Profil", "label": "Navigation principale", "open": "Ouvrir le menu", "close": "Fermer le menu" }
+  },
+  "common": {
+    "email": "Email",
+    "password": "Mot de passe",
+    "loading": "Chargement…",
+    "cancel": "Annuler",
+    "backToLogin": "Retour à la connexion",
+    "signIn": "Se connecter"
+  },
+  "validation": {
+    "required": "Champ obligatoire",
+    "email": "Email invalide",
+    "minlength": "Minimum {{count}} caractères",
+    "maxlength": "Maximum {{count}} caractères",
+    "pattern": "Format invalide",
+    "mismatch": "Les mots de passe ne correspondent pas",
+    "invalid": "Valeur invalide"
+  },
+  "errors": {
+    "generic": "Une erreur est survenue.",
+    "invalidLink": "Lien invalide.",
+    "INVALID_CREDENTIALS": "Email ou mot de passe incorrect.",
+    "EMAIL_NOT_VERIFIED": "Votre email n'est pas encore vérifié.",
+    "INVALID_TOKEN": "Ce lien est invalide, expiré ou déjà utilisé.",
+    "MFA_INVALID_CODE": "Code incorrect.",
+    "MFA_CODE_EXPIRED": "Ce code a expiré. Demandez-en un nouveau.",
+    "MFA_TOO_MANY_ATTEMPTS": "Trop de tentatives. Demandez un nouveau code.",
+    "MFA_RESEND_TOO_SOON": "Patientez quelques secondes avant de demander un nouveau code.",
+    "MFA_TOO_MANY_RESENDS": "Nombre maximum de renvois atteint. Reconnectez-vous.",
+    "MFA_CHALLENGE_EXPIRED": "La vérification a expiré. Reconnectez-vous.",
+    "INVALID_REFRESH_TOKEN": "Session expirée. Reconnectez-vous.",
+    "UNAUTHENTICATED": "Session expirée. Reconnectez-vous.",
+    "UNSUPPORTED_PROVIDER": "Fournisseur de connexion non supporté.",
+    "INVALID_SOCIAL_TOKEN": "Connexion via le fournisseur refusée.",
+    "OAUTH_EMAIL_NOT_VERIFIED": "L'email de votre compte n'est pas vérifié chez le fournisseur.",
+    "SOCIAL_PROVIDER_UNAVAILABLE": "Fournisseur indisponible, réessayez plus tard."
+  },
+  "auth": {
+    "continueWith": "Continuer avec",
+    "login": {
+      "title": "Connexion",
+      "submit": "Se connecter",
+      "forgotPassword": "Mot de passe oublié ?",
+      "noAccount": "Pas encore de compte ?",
+      "createAccount": "Créer un compte",
+      "resendVerification": "Renvoyer l'email de confirmation"
+    },
+    "mfa": {
+      "intro": "Un code à 6 chiffres vient de vous être envoyé par email (valable 5 minutes).",
+      "code": "Code",
+      "submit": "Valider",
+      "resend": "Renvoyer le code",
+      "resendCountdown": "Renvoyer le code ({{seconds}} s)",
+      "resent": "Un nouveau code vient de vous être envoyé. Le précédent n'est plus valable.",
+      "backToLogin": "Revenir à la connexion"
+    },
+    "register": {
+      "title": "Créer un compte",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "confirmPassword": "Confirmer le mot de passe",
+      "submit": "Créer mon compte",
+      "sentTitle": "Presque fini !",
+      "sentDescription": "Si cette adresse peut être utilisée, un email de confirmation vient d'être envoyé (lien valable 24 h).",
+      "emailNotReceived": "Email non reçu ?",
+      "alreadyRegistered": "Déjà inscrit ?"
+    },
+    "forgot": {
+      "title": "Mot de passe oublié",
+      "hint": "Saisissez votre email pour recevoir un lien de réinitialisation.",
+      "button": "Envoyer le lien",
+      "done": "Si un compte existe pour cette adresse, un email de réinitialisation vient d'être envoyé (lien valable 1 h)."
+    },
+    "resendVerification": {
+      "title": "Renvoyer l'email de confirmation",
+      "hint": "Saisissez l'email utilisé à l'inscription.",
+      "button": "Renvoyer",
+      "done": "Si ce compte existe et n'est pas encore vérifié, un nouvel email vient d'être envoyé (lien valable 24 h)."
+    },
+    "reset": {
+      "title": "Nouveau mot de passe",
+      "newPassword": "Nouveau mot de passe",
+      "confirm": "Confirmer",
+      "submit": "Changer le mot de passe",
+      "doneTitle": "Mot de passe modifié",
+      "doneDescription": "Toutes vos sessions ont été déconnectées. Vous pouvez vous reconnecter.",
+      "requestNewLink": "Demander un nouveau lien"
+    },
+    "verify": {
+      "title": "Confirmation de l'email",
+      "checking": "Vérification en cours…",
+      "ok": "Email confirmé, votre compte est actif.",
+      "newLink": "Recevoir un nouveau lien"
+    }
+  },
+  "profile": {
+    "title": "Mon profil",
+    "identity": { "title": "Informations personnelles" },
+    "mfa": {
+      "title": "Double authentification",
+      "description": "Un code à 6 chiffres est envoyé par email à chaque connexion.",
+      "enabled": "Activée",
+      "disabled": "Désactivée",
+      "enable": "Activer la double authentification",
+      "disable": "Désactiver la double authentification",
+      "disableConfirm": "Désactiver"
+    },
+    "password": {
+      "title": "Mot de passe",
+      "current": "Mot de passe actuel",
+      "new": "Nouveau mot de passe",
+      "confirm": "Confirmer le nouveau mot de passe",
+      "submit": "Changer le mot de passe",
+      "unavailable": "Le changement de mot de passe n'est pas encore disponible.",
+      "changed": "Mot de passe modifié."
+    },
+    "session": {
+      "title": "Session",
+      "description": "Vous serez déconnecté de cet appareil.",
+      "logout": "Se déconnecter"
+    },
+    "delete": {
+      "title": "Supprimer mon compte",
+      "description": "Cette action est définitive : votre compte et vos données seront supprimés.",
+      "button": "Supprimer mon compte",
+      "confirmPrompt": "Saisissez votre mot de passe pour confirmer la suppression.",
+      "confirm": "Supprimer définitivement",
+      "unavailable": "La suppression du compte n'est pas encore disponible."
+    }
+  }
+}
