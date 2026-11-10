@@ -125,6 +125,19 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/me/email")
+    public ResponseEntity<Void> changeEmail(@AuthenticationPrincipal Jwt jwt,
+                                            @Valid @RequestBody ChangeEmailRequest body) {
+        authService.requestEmailChange(current(jwt), body.newEmail(), body.currentPassword());
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping("/confirm-email-change")
+    public ResponseEntity<Void> confirmEmailChange(@Valid @RequestBody TokenRequest body) {
+        authService.confirmEmailChange(body.token());
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/me/delete")
     public ResponseEntity<Void> deleteAccount(@AuthenticationPrincipal Jwt jwt,
                                               @Valid @RequestBody DeleteAccountRequest body) {

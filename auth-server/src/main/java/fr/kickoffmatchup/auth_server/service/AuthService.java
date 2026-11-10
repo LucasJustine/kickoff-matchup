@@ -10,6 +10,7 @@ import fr.kickoffmatchup.auth_server.repository.UserIdentityRepository;
 import fr.kickoffmatchup.auth_server.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ public class AuthService {
 
     private static final Duration VERIFY_TTL = Duration.ofHours(24);
     private static final Duration RESET_TTL = Duration.ofHours(1);
+    private static final Duration EMAIL_CHANGE_TTL = Duration.ofHours(24);
 
     private final UserRepository users;
     private final PasswordEncoder encoder;
@@ -131,6 +133,49 @@ public class AuthService {
         user.setPassword(encoder.encode(newPassword));
         users.save(user);
         refreshTokens.revokeAll(user);
+    }
+
+    @Transactional
+    public void requestEmailChange(User user, String rawNewEmail, String currentPassword) {
+        if (user.getPassword() == null) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "PASSWORD_REQUIRED_FOR_EMAIL_CHANGE");
+        }
+        if (currentPassword == null || !encoder.matches(currentPassword, user.getPassword())) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "INVALID_CURRENT_PASSWORD");
+        }
+        String newEmail = normalize(rawNewEmail);
+        if (newEmail.equals(user.getEmail())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "EMAIL_UNCHANGED");
+        }
+        Optional<User> owner = users.findByEmail(newEmail);
+        if (owner.isPresent()) {
+            emails.sendAccountAlreadyExists(owner.get().getEmail(), owner.get().getFirstName());
+            return;
+        }
+        String token = tokens.create(user, TokenType.EMAIL_CHANGE, EMAIL_CHANGE_TTL, null, newEmail);
+        emails.sendEmailChange(newEmail, user.getFirstName(), token);
+        emails.sendEmailChangeNotice(user.getEmail(), user.getFirstName(), newEmail);
+    }
+
+    @Transactional
+    public void confirmEmailChange(String token) {
+        VerificationToken verification = tokens.consumeToken(token, TokenType.EMAIL_CHANGE);
+        String newEmail = verification.getPendingEmail();
+        if (newEmail == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_TOKEN");
+        }
+        User user = verification.getUser();
+        boolean taken = users.findByEmail(newEmail).filter(other -> !other.getId().equals(user.getId())).isPresent();
+        if (taken) {
+            throw new ApiException(HttpStatus.CONFLICT, "EMAIL_ALREADY_USED");
+        }
+        user.setEmail(newEmail);
+        user.setEmailVerified(true);
+        try {
+            users.saveAndFlush(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new ApiException(HttpStatus.CONFLICT, "EMAIL_ALREADY_USED");
+        }
     }
 
     @Transactional

@@ -42,6 +42,11 @@ public class VerificationTokenService {
 
     @Transactional
     public String create(User user, TokenType type, Duration ttl, String pendingPasswordHash) {
+        return create(user, type, ttl, pendingPasswordHash, null);
+    }
+
+    @Transactional
+    public String create(User user, TokenType type, Duration ttl, String pendingPasswordHash, String pendingEmail) {
         repository.deleteByUserAndType(user, type);
 
         byte[] bytes = new byte[32];
@@ -54,6 +59,7 @@ public class VerificationTokenService {
                 .type(type)
                 .expiresAt(Instant.now().plus(ttl))
                 .pendingPasswordHash(pendingPasswordHash)
+                .pendingEmail(pendingEmail)
                 .build());
         return raw;
     }

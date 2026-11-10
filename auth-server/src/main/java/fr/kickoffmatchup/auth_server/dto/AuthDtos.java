@@ -39,5 +39,9 @@ public final class AuthDtos {
 
     public record DeleteAccountRequest(@Size(max = 72) String currentPassword) {}
 
+    public record ChangeEmailRequest(
+            @NotBlank @Email @Size(max = 254) String newEmail,
+            @Size(max = 72) String currentPassword) {}
+
 
 }

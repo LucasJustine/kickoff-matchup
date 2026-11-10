@@ -38,4 +38,7 @@ public class VerificationToken {
 
     @Column(name = "pending_password_hash", length = 100)
     private String pendingPasswordHash;
+
+    @Column(name = "pending_email", length = 254)
+    private String pendingEmail;
 }
