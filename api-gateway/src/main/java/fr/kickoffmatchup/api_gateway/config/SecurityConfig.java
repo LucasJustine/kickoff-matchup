@@ -50,6 +50,7 @@ public class SecurityConfig {
             "/login/oauth2/code/**",
             "/bff/auth/register",
             "/bff/auth/verify-email",
+            "/bff/auth/resend-verification",
             "/bff/auth/forgot-password",
             "/bff/auth/reset-password"
     };
