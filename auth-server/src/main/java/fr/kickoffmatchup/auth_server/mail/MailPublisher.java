@@ -25,7 +25,7 @@ public class MailPublisher {
             rabbit.convertAndSend(RabbitConfig.EXCHANGE, RabbitConfig.ROUTING_KEY, event.message());
         } catch (AmqpException e) {
             log.error("Mail {} non publié (RabbitMQ indisponible) : l'utilisateur ne le recevra pas",
-                    event.message().type(), e);
+                    event.message().getClass().getSimpleName(), e);
             throw e;
         }
     }

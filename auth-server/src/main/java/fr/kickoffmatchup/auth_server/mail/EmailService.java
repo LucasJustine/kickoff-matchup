@@ -12,32 +12,38 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 public class EmailService {
 
 
-    public enum MailType { VERIFY_EMAIL, PASSWORD_RESET, MFA_CODE, ACCOUNT_ALREADY_EXISTS }
-
-    public record MailMessage(MailType type, String to, String firstName, String token, String code, String locale) {}
-
     public record MailRequested(MailMessage message) {}
 
     private final ApplicationEventPublisher events;
 
     public void sendVerification(String to, String firstName, String token) {
         events.publishEvent(new MailRequested(
-                new MailMessage(MailType.VERIFY_EMAIL, to, firstName, token, null, locale())));
+                new MailMessage.VerifyEmail(to, locale(), firstName, token)));
     }
 
     public void sendPasswordReset(String to, String firstName, String token) {
         events.publishEvent(new MailRequested(
-                new MailMessage(MailType.PASSWORD_RESET, to, firstName, token, null, locale())));
+                new MailMessage.PasswordReset(to, locale(), firstName, token)));
     }
 
     public void sendMfaCode(String to, String code) {
         events.publishEvent(new MailRequested(
-                new MailMessage(MailType.MFA_CODE, to, null, null, code, locale())));
+                new MailMessage.MfaCode(to, locale(), code)));
     }
 
     public void sendAccountAlreadyExists(String to, String firstName) {
         events.publishEvent(new MailRequested(
-                new MailMessage(MailType.ACCOUNT_ALREADY_EXISTS, to, firstName, null, null, locale())));
+                new MailMessage.AccountAlreadyExists(to, locale(), firstName)));
+    }
+
+    public void sendEmailChange(String to, String firstName, String token) {
+        events.publishEvent(new MailRequested(
+                new MailMessage.EmailChange(to, locale(), firstName, token)));
+    }
+
+    public void sendEmailChangeNotice(String to, String firstName, String newEmail) {
+        events.publishEvent(new MailRequested(
+                new MailMessage.EmailChangeNotice(to, locale(), firstName, newEmail)));
     }
 
     private static String locale() {
