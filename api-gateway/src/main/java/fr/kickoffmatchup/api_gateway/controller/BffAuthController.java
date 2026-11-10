@@ -4,6 +4,7 @@ import fr.kickoffmatchup.api_gateway.utils.Session;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +32,7 @@ public class BffAuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest payload, HttpServletRequest request) {
         LoginResponse response = authServerClient.post()
                 .uri("/auth/login")
+                .headers(headers -> forwardLanguage(request, headers))
                 .body(payload)
                 .retrieve()
                 .body(LoginResponse.class);
@@ -59,6 +61,7 @@ public class BffAuthController {
     public ResponseEntity<?> verifyMfa(@RequestBody MfaVerifyRequest payload, HttpServletRequest request) {
         AuthResult result = authServerClient.post()
                 .uri("/auth/mfa/verify")
+                .headers(headers -> forwardLanguage(request, headers))
                 .body(payload)
                 .retrieve()
                 .body(AuthResult.class);
@@ -103,6 +106,13 @@ public class BffAuthController {
 
         // 4. Renvoi d'un statut 204 (No Content) à Angular
         return ResponseEntity.noContent().build();
+    }
+
+    private static void forwardLanguage(HttpServletRequest request, HttpHeaders headers) {
+        String language = request.getHeader(HttpHeaders.ACCEPT_LANGUAGE);
+        if (language != null) {
+            headers.set(HttpHeaders.ACCEPT_LANGUAGE, language);
+        }
     }
 
     public record LoginRequest(String email, String password) {
