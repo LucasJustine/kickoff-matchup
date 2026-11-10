@@ -51,6 +51,7 @@ public class SecurityConfig {
             "/bff/auth/register",
             "/bff/auth/verify-email",
             "/bff/auth/resend-verification",
+            "/bff/auth/confirm-email-change",
             "/bff/auth/forgot-password",
             "/bff/auth/reset-password"
     };

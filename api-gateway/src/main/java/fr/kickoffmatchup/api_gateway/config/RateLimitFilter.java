@@ -31,7 +31,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
             "/bff/auth/mfa/resend",
             "/bff/auth/register",
             "/bff/auth/forgot-password",
-            "/bff/auth/resend-verification");
+            "/bff/auth/resend-verification",
+            "/bff/auth/me/email",
+            "/bff/auth/confirm-email-change");
 
     private final StringRedisTemplate redis;
     private final int maxRequests;

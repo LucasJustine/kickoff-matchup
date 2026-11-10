@@ -34,7 +34,7 @@ spring:
               - id: auth-service-passthrough
                 uri: ${AUTH_SERVER_URL:http://localhost:9000}
                 predicates:
-                  - Path=/bff/auth/register, /bff/auth/verify-email, /bff/auth/resend-verification, /bff/auth/forgot-password, /bff/auth/reset-password, /bff/auth/me, /bff/auth/me/mfa, /bff/auth/me/password, /bff/auth/me/delete, /bff/auth/mfa/resend
+                  - Path=/bff/auth/register, /bff/auth/verify-email, /bff/auth/resend-verification, /bff/auth/forgot-password, /bff/auth/reset-password, /bff/auth/me, /bff/auth/me/mfa, /bff/auth/me/password, /bff/auth/me/delete, /bff/auth/me/email, /bff/auth/confirm-email-change, /bff/auth/mfa/resend
                 filters:
                   - RewritePath=/bff/(?<segment>.*), /$\{segment}
     data:
