@@ -7,11 +7,11 @@
     }
     @case ('ok') {
       <nz-alert nzType="success" nzShowIcon [nzMessage]="'auth.verify.ok' | translate" />
-      <p><a routerLink="/login">{{ 'common.signIn' | translate }}</a></p>
+      <p><a routerLink="/auth/login">{{ 'common.signIn' | translate }}</a></p>
     }
     @case ('error') {
       <nz-alert nzType="error" nzShowIcon [nzMessage]="error() | translate" />
-      <p><a routerLink="/resend-verification">{{ 'auth.verify.newLink' | translate }}</a></p>
+      <p><a routerLink="/auth/resend-verification">{{ 'auth.verify.newLink' | translate }}</a></p>
     }
   }
 </div>

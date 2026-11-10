@@ -8,21 +8,21 @@
       [nzMessage]="'auth.register.sentTitle' | translate"
       [nzDescription]="'auth.register.sentDescription' | translate"
     />
-    <p><a routerLink="/login">{{ 'common.signIn' | translate }}</a> · <a routerLink="/resend-verification">{{ 'auth.register.emailNotReceived' | translate }}</a></p>
+    <p><a routerLink="/auth/login">{{ 'common.signIn' | translate }}</a> · <a routerLink="/auth/resend-verification">{{ 'auth.register.emailNotReceived' | translate }}</a></p>
   } @else {
     @if (error()) {
       <nz-alert nzType="error" nzShowIcon [nzMessage]="error() | translate" />
     }
     <form nz-form nzLayout="vertical" [formGroup]="form" (ngSubmit)="submit()">
       <nz-form-item>
-        <nz-form-label nzFor="firstName">{{ 'auth.register.firstName' | translate }}</nz-form-label>
+        <nz-form-label nzFor="firstName">{{ 'common.firstName' | translate }}</nz-form-label>
         <nz-form-control [nzErrorTip]="fieldError(form.controls.firstName)">
           <input nz-input id="firstName" formControlName="firstName" autocomplete="given-name" />
         </nz-form-control>
       </nz-form-item>
 
       <nz-form-item>
-        <nz-form-label nzFor="lastName">{{ 'auth.register.lastName' | translate }}</nz-form-label>
+        <nz-form-label nzFor="lastName">{{ 'common.lastName' | translate }}</nz-form-label>
         <nz-form-control [nzErrorTip]="fieldError(form.controls.lastName)">
           <input nz-input id="lastName" formControlName="lastName" autocomplete="family-name" />
         </nz-form-control>
@@ -52,6 +52,6 @@
       <button nz-button nzType="primary" nzBlock type="submit" [nzLoading]="loading()">{{ 'auth.register.submit' | translate }}</button>
     </form>
 
-    <p>{{ 'auth.register.alreadyRegistered' | translate }} <a routerLink="/login">{{ 'common.signIn' | translate }}</a></p>
+    <p>{{ 'auth.register.alreadyRegistered' | translate }} <a routerLink="/auth/login">{{ 'common.signIn' | translate }}</a></p>
   }
 </div>

@@ -14,4 +14,5 @@ export const routes: Routes = [
     },
     ...EMAIL_LINK_ROUTES,
     { path: 'profile', canActivate: [authGuard], loadComponent: () => import('./pages/profile/profile').then(m => m.Profile) },
+    { path: '**', loadComponent: () => import('./pages/not-found/not-found').then((m) => m.NotFound) },
 ];

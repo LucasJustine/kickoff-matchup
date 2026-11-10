@@ -1,1 +1,18 @@
-<p>welcome works!</p>
+<section class="py-8 md:py-16">
+  @if (authenticated() && user()?.firstName) {
+    <p class="mb-2 text-base">{{ 'home.greeting' | translate: { name: user()?.firstName } }}</p>
+  }
+  <h1 class="m-0 max-w-[18ch] text-4xl leading-tight font-semibold text-white md:text-6xl">
+    {{ 'home.title' | translate }}
+  </h1>
+  <p class="mt-6 max-w-[60ch] text-lg">{{ 'home.lead' | translate }}</p>
+
+  <div class="mt-8 flex flex-wrap gap-3">
+    @if (authenticated()) {
+      <a nz-button nzType="primary" nzSize="large" routerLink="/profile">{{ 'home.profile' | translate }}</a>
+    } @else {
+      <a nz-button nzType="primary" nzSize="large" routerLink="/auth/register">{{ 'home.register' | translate }}</a>
+      <a nz-button nzSize="large" routerLink="/auth/login">{{ 'common.signIn' | translate }}</a>
+    }
+  </div>
+</section>
