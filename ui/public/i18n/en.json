@@ -9,7 +9,8 @@
       "open": "Open menu",
       "close": "Close menu",
       "logout": "Sign out",
-      "language": "Language"
+      "language": "Language",
+      "account": "User account"
     }
   },
   "common": {
@@ -57,7 +58,10 @@
     "MAIL_QUEUE_UNAVAILABLE": "The email couldn't be sent. Try again in a moment.",
     "AUTH_SERVER_UNAVAILABLE": "The sign-in service is unavailable. Try again in a moment.",
     "AUTH_SERVER_ERROR": "The sign-in service ran into an error. Try again.",
-    "NETWORK_ERROR": "Can't reach the server. Check your connection."
+    "NETWORK_ERROR": "Can't reach the server. Check your connection.",
+    "EMAIL_UNCHANGED": "This is already your current address.",
+    "EMAIL_ALREADY_USED": "This address is already in use.",
+    "PASSWORD_REQUIRED_FOR_EMAIL_CHANGE": "Set a password first (using \"Forgot password\")."
   },
   "auth": {
     "continueWith": "Continue with",
@@ -114,6 +118,11 @@
       "checking": "Verifying…",
       "ok": "Email confirmed, your account is active.",
       "newLink": "Get a new link"
+    },
+    "emailChange": {
+      "title": "Email address change",
+      "checking": "Confirming…",
+      "ok": "Your email address has been changed."
     }
   },
   "profile": {
@@ -150,6 +159,19 @@
       "button": "Delete my account",
       "confirmPrompt": "Enter your password to confirm the deletion.",
       "confirm": "Delete permanently"
+    },
+    "tabs": {
+      "identity": "Details",
+      "security": "Security",
+      "account": "Account"
+    },
+    "email": {
+      "change": "Change email address",
+      "modalTitle": "Change email address",
+      "new": "New email address",
+      "hint": "A confirmation link will be sent to this address. Your current address stays valid until you confirm.",
+      "submit": "Send confirmation link",
+      "sent": "A confirmation email was sent to {{email}}. Your address only changes once you click the link."
     }
   },
   "home": {

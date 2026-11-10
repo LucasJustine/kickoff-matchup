@@ -9,6 +9,7 @@ import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzTabsModule } from 'ng-zorro-antd/tabs';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AuthControllerService, UserDto } from '../../api-auth';
@@ -26,6 +27,7 @@ import { SessionService } from '../../services/session.service';
         NzFormModule,
         NzInputModule,
         NzModalModule,
+        NzTabsModule,
         NzTagModule,
         TranslatePipe,
     ],
@@ -51,6 +53,15 @@ export class Profile implements OnInit {
     protected readonly savingIdentity = signal(false);
     protected readonly identityInfo = signal('');
     protected readonly identityError = signal('');
+    protected readonly emailModalOpen = signal(false);
+    protected readonly emailModalError = signal('');
+    protected readonly savingEmail = signal(false);
+    protected readonly emailInfo = signal('');
+    protected readonly pendingEmail = signal('');
+    protected readonly emailForm = this.fb.group({
+        newEmail: ['', [Validators.required, Validators.email, Validators.maxLength(254)]],
+        password: ['', Validators.required],
+    });
     protected readonly identityForm = this.fb.group({
         firstName: ['', [Validators.required, Validators.maxLength(100)]],
         lastName: ['', [Validators.required, Validators.maxLength(100)]],
@@ -163,6 +174,35 @@ export class Profile implements OnInit {
             error: (e) => {
                 this.savingPassword.set(false);
                 this.passwordError.set(handleApiError(this.passwordForm, e));
+            },
+        });
+    }
+
+    protected openEmailModal(): void {
+        this.emailForm.reset();
+        this.emailModalError.set('');
+        this.emailModalOpen.set(true);
+    }
+
+    protected cancelEmailModal(): void {
+        this.emailModalOpen.set(false);
+    }
+
+    protected submitEmailChange(): void {
+        if (this.emailForm.invalid) return this.emailForm.markAllAsTouched();
+        const { newEmail, password } = this.emailForm.getRawValue();
+        this.savingEmail.set(true);
+        this.emailModalError.set('');
+        this.api.changeEmail({ newEmail, currentPassword: password }).subscribe({
+            next: () => {
+                this.savingEmail.set(false);
+                this.emailModalOpen.set(false);
+                this.pendingEmail.set(newEmail.trim());
+                this.emailInfo.set('profile.email.sent');
+            },
+            error: (e) => {
+                this.savingEmail.set(false);
+                this.emailModalError.set(handleApiError(this.emailForm, e));
             },
         });
     }

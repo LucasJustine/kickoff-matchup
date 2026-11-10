@@ -9,7 +9,8 @@
       "open": "Ouvrir le menu",
       "close": "Fermer le menu",
       "logout": "Se déconnecter",
-      "language": "Langue"
+      "language": "Langue",
+      "account": "Compte utilisateur"
     }
   },
   "common": {
@@ -57,7 +58,10 @@
     "MAIL_QUEUE_UNAVAILABLE": "L'email n'a pas pu être envoyé. Réessayez dans quelques instants.",
     "AUTH_SERVER_UNAVAILABLE": "Le service de connexion est indisponible. Réessayez dans quelques instants.",
     "AUTH_SERVER_ERROR": "Le service de connexion a rencontré une erreur. Réessayez.",
-    "NETWORK_ERROR": "Serveur injoignable. Vérifiez votre connexion."
+    "NETWORK_ERROR": "Serveur injoignable. Vérifiez votre connexion.",
+    "EMAIL_UNCHANGED": "C'est déjà votre adresse actuelle.",
+    "EMAIL_ALREADY_USED": "Cette adresse est déjà utilisée.",
+    "PASSWORD_REQUIRED_FOR_EMAIL_CHANGE": "Définissez d'abord un mot de passe (avec « Mot de passe oublié »)."
   },
   "auth": {
     "continueWith": "Continuer avec",
@@ -114,6 +118,11 @@
       "checking": "Vérification en cours…",
       "ok": "Email confirmé, votre compte est actif.",
       "newLink": "Recevoir un nouveau lien"
+    },
+    "emailChange": {
+      "title": "Changement d'adresse email",
+      "checking": "Confirmation en cours…",
+      "ok": "Votre adresse email a été modifiée."
     }
   },
   "profile": {
@@ -150,6 +159,19 @@
       "button": "Supprimer mon compte",
       "confirmPrompt": "Saisissez votre mot de passe pour confirmer la suppression.",
       "confirm": "Supprimer définitivement"
+    },
+    "tabs": {
+      "identity": "Informations",
+      "security": "Sécurité",
+      "account": "Compte"
+    },
+    "email": {
+      "change": "Changer l'adresse email",
+      "modalTitle": "Changer l'adresse email",
+      "new": "Nouvelle adresse email",
+      "hint": "Un lien de confirmation sera envoyé à cette adresse. Votre adresse actuelle reste valable tant que vous n'avez pas confirmé.",
+      "submit": "Envoyer le lien de confirmation",
+      "sent": "Un email de confirmation a été envoyé à {{email}}. Votre adresse ne changera qu'après avoir cliqué sur le lien."
     }
   },
   "home": {
