@@ -2,8 +2,9 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
-import { SessionService } from '../services/session.service';
+import { SessionService, SKIP_AUTH_REDIRECT } from '../services/session.service';
 
+const ENTRY_PATHS = ['/auth/login', '/auth/mfa/verify', '/auth/mfa/resend', '/auth/logout'];
 
 export const unauthorizedInterceptor: HttpInterceptorFn = (req, next) => {
     const router = inject(Router);
@@ -11,9 +12,12 @@ export const unauthorizedInterceptor: HttpInterceptorFn = (req, next) => {
 
     return next(req).pipe(
         catchError((err: HttpErrorResponse) => {
-            if (err.status === 401 && !req.url.includes('/auth/')) {
+            const expected = req.context.get(SKIP_AUTH_REDIRECT) || ENTRY_PATHS.some((path) => req.url.endsWith(path));
+            if (err.status === 401 && !expected) {
                 session.clear();
-                router.navigate(['/auth/login'], { queryParams: { returnUrl: router.url } });
+                if (!router.url.startsWith('/auth/login')) {
+                    router.navigate(['/auth/login'], { queryParams: { returnUrl: router.url } });
+                }
             }
             return throwError(() => err);
         }),
