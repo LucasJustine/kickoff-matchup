@@ -6,6 +6,10 @@ export const EMAIL_LINK_ROUTES: Routes = [
         loadComponent: () => import('./verify-email/verify-email').then((m) => m.VerifyEmail),
     },
     {
+        path: 'confirm-email-change',
+        loadComponent: () => import('./confirm-email-change/confirm-email-change').then((m) => m.ConfirmEmailChange),
+    },
+    {
         path: 'reset-password',
         loadComponent: () => import('./reset-password/reset-password').then((m) => m.ResetPassword),
     },

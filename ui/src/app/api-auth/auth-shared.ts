@@ -34,6 +34,9 @@ const KNOWN_CODES = new Set([
     'AUTH_SERVER_UNAVAILABLE',
     'AUTH_SERVER_ERROR',
     'NETWORK_ERROR',
+    'EMAIL_UNCHANGED',
+    'EMAIL_ALREADY_USED',
+    'PASSWORD_REQUIRED_FOR_EMAIL_CHANGE',
 ]);
 
 export function toApiError(err: unknown): ApiError {

@@ -9,6 +9,7 @@ encoder.ts
 git_push.sh
 index.ts
 model/authResult.ts
+model/changeEmailRequest.ts
 model/changePasswordRequest.ts
 model/deleteAccountRequest.ts
 model/emailRequest.ts

@@ -1,4 +1,5 @@
 export * from './authResult';
+export * from './changeEmailRequest';
 export * from './changePasswordRequest';
 export * from './deleteAccountRequest';
 export * from './emailRequest';
