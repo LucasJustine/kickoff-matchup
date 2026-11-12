@@ -35,13 +35,13 @@ services:
     restart: unless-stopped
 
   user-database:
-    image: mysql:latest                      # gardez la version qui a créé le volume (un volume MySQL ne se "rétrograde" pas)
+    image: mysql:latest                      
     container_name: user-database
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
-      MYSQL_DATABASE: ${USER_DB_NAME:-user_db}
-      MYSQL_USER: ${USER_DB_USER:-user-service-user}
-      MYSQL_PASSWORD: ${USER_DB_PASSWORD:-user-service-password}
+      MYSQL_DATABASE: ${USER_DB_NAME}
+      MYSQL_USER: ${USER_DB_USER}
+      MYSQL_PASSWORD: ${USER_DB_PASSWORD}
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     ports:
       - "3307:3306"
@@ -59,10 +59,10 @@ services:
     image: mysql:latest
     container_name: team-database
     environment:
-      MYSQL_ROOT_PASSWORD: ${TEAM_DB_ROOT_PASSWORD:-root}
-      MYSQL_DATABASE: ${TEAM_DB_NAME:-team_db}
-      MYSQL_USER: ${TEAM_DB_USER:-team}
-      MYSQL_PASSWORD: ${TEAM_DB_PASSWORD:-team}
+      MYSQL_ROOT_PASSWORD: ${TEAM_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${TEAM_DB_NAME}
+      MYSQL_USER: ${TEAM_DB_USER}
+      MYSQL_PASSWORD: ${TEAM_DB_PASSWORD}
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     ports:
       - "3305:3306"
@@ -92,19 +92,118 @@ services:
       - mailpit-data:/data
     restart: unless-stopped
 
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq-lib:/var/lib/rabbitmq/
+      - rabbitmq-log:/var/log/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+
+  auth-server:
+    image: maven:3.9-eclipse-temurin-17
+    container_name: auth-server
+    profiles: ["apps"]
+    working_dir: /app
+    command: mvn spring-boot:run
+    volumes:
+      - ${WORKTREES_DIR}/auth-server:/app
+      - auth-server-target:/app/target      
+      - maven-cache:/root/.m2
+    ports:
+      - "9000:80"                            # accès direct depuis la machine (debug)
+    environment:
+      SERVER_PORT: 80                        
+      DB_HOST: user-database
+      DB_PORT: 3306
+      DB_NAME: ${USER_DB_NAME}
+      DB_USER: ${USER_DB_USER}
+      DB_PASSWORD: ${USER_DB_PASSWORD}
+      REDIS_HOST: kickoff-redis
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      GOOGLE_CLIENT_IDS: ${GOOGLE_CLIENT_ID}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_PRIVATE_KEY_LOCATION: ${JWT_PRIVATE_KEY_LOCATION:-}
+      JWT_PUBLIC_KEY_LOCATION: ${JWT_PUBLIC_KEY_LOCATION:-}
+    depends_on:
+      user-database:
+        condition: service_healthy
+      kickoff-redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  api-gateway:
+    image: maven:3.9-eclipse-temurin-17
+    container_name: api-gateway
+    profiles: ["apps"]
+    working_dir: /app
+    command: mvn spring-boot:run
+    volumes:
+      - ${WORKTREES_DIR}/api-gateway:/app
+      - api-gateway-target:/app/target
+      - maven-cache:/root/.m2
+    environment:
+      REDIS_HOST: kickoff-redis
+      AUTH_SERVER_URL: http://auth-server
+      FRONTEND_URL: ${FRONTEND_URL}
+      COOKIE_SECURE: ${COOKIE_SECURE}
+      JWT_ISSUER: ${JWT_ISSUER}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+    ports:
+      - "8081:8081"                          # accès direct depuis la machine (debug, Postman) ; nginx passe par le réseau Docker
+    depends_on:
+      kickoff-redis:
+        condition: service_healthy
+      auth-server:
+        condition: service_started
+
+  mail-service:
+    image: maven:3.9-eclipse-temurin-17
+    container_name: mail-service
+    profiles: ["apps"]
+    working_dir: /app
+    command: mvn spring-boot:run
+    volumes:
+      - ${WORKTREES_DIR}/mail_service:/app
+      - mail-service-target:/app/target
+      - maven-cache:/root/.m2
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      MAIL_HOST: kickoff-mail
+      FRONTEND_URL: ${FRONTEND_URL}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      kickoff-mail:
+        condition: service_started
+
 volumes:
+  auth-server-target:
+  api-gateway-target:
+  mail-service-target:
+  maven-cache:                               # dépendances Maven partagées par les services Spring
   redis-data:
   team-database-data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${VOLUMES_DIR:-/run/desktop/mnt/host/e/Projets/docker/volumes/kickoff-matchup}/team
   mailpit-data:
-
   user-database-data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${VOLUMES_DIR:-/run/desktop/mnt/host/e/Projets/docker/volumes/kickoff-matchup}/user
+  rabbitmq-lib:
+  rabbitmq-log:
