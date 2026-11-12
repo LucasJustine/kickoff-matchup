@@ -46,6 +46,11 @@ public class EmailService {
                 new MailMessage.EmailChangeNotice(to, locale(), firstName, newEmail)));
     }
 
+    public void sendSetPassword(String to, String firstName, String token) {
+        events.publishEvent(new MailRequested(
+                new MailMessage.SetPassword(to, locale(), firstName, token)));
+    }
+
     private static String locale() {
         if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attributes
                 && attributes.getRequest().getHeader(HttpHeaders.ACCEPT_LANGUAGE) != null) {
