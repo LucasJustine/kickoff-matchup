@@ -3,6 +3,7 @@ package fr.kickoffmatchup.auth_server.controller;
 import fr.kickoffmatchup.auth_server.dto.ApiDtos.*;
 import fr.kickoffmatchup.auth_server.dto.AuthDtos.*;
 import fr.kickoffmatchup.auth_server.enums.AuthProvider;
+import fr.kickoffmatchup.auth_server.enums.LoginMethod;
 import fr.kickoffmatchup.auth_server.exception.ApiException;
 import fr.kickoffmatchup.auth_server.mail.EmailService;
 import fr.kickoffmatchup.auth_server.model.User;
@@ -70,7 +71,7 @@ public class AuthController {
             emailService.sendMfaCode(user.getEmail(), challenge.code());
             return LoginResponse.mfaRequired(challenge.id());
         }
-        return LoginResponse.ok(tokens.issueFor(user));
+        return LoginResponse.ok(tokens.issueFor(user, LoginMethod.PASSWORD));
     }
 
     @PostMapping("/mfa/verify")
@@ -78,7 +79,7 @@ public class AuthController {
         Long userId = mfaService.verify(body.challengeId(), body.code());
         User user = users.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "MFA_CHALLENGE_EXPIRED"));
-        return tokens.issueFor(user);
+        return tokens.issueFor(user, LoginMethod.PASSWORD);
     }
 
     @PostMapping("/mfa/resend")
@@ -94,7 +95,7 @@ public class AuthController {
     @PostMapping("/social/{provider}")
     public AuthResult social(@PathVariable String provider, @Valid @RequestBody SocialLoginRequest body) {
         SocialProfile profile = socialVerifier.verify(parseProvider(provider), body.idToken());
-        return tokens.issueFor(oauthUsers.findOrCreate(profile));
+        return tokens.issueFor(oauthUsers.findOrCreate(profile), LoginMethod.PROVIDER);
     }
 
     @PostMapping("/refresh")
@@ -110,12 +111,12 @@ public class AuthController {
 
     @GetMapping("/me")
     public UserDto me(@AuthenticationPrincipal Jwt jwt) {
-        return UserDto.from(current(jwt));
+        return UserDto.from(current(jwt), loginMethod(jwt));
     }
 
     @PutMapping("/me")
     public UserDto updateProfile(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody UpdateProfileRequest body) {
-        return UserDto.from(authService.updateProfile(current(jwt), body.firstName(), body.lastName()));
+        return UserDto.from(authService.updateProfile(current(jwt), body.firstName(), body.lastName()), loginMethod(jwt));
     }
 
     @PostMapping("/me/password")
@@ -123,6 +124,12 @@ public class AuthController {
                                                @Valid @RequestBody ChangePasswordRequest body) {
         authService.changePassword(current(jwt), body.currentPassword(), body.newPassword());
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/me/password-link")
+    public ResponseEntity<Void> requestPasswordLink(@AuthenticationPrincipal Jwt jwt) {
+        authService.requestPasswordLink(current(jwt));
+        return ResponseEntity.accepted().build();
     }
 
     @PostMapping("/me/email")
@@ -147,7 +154,12 @@ public class AuthController {
 
     @PutMapping("/me/mfa")
     public UserDto setMfa(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody MfaToggleRequest body) {
-        return UserDto.from(authService.setMfa(current(jwt), body.enabled(), body.currentPassword()));
+        LoginMethod loginMethod = loginMethod(jwt);
+        return UserDto.from(authService.setMfa(current(jwt), body.enabled(), body.currentPassword(), loginMethod), loginMethod);
+    }
+
+    private static LoginMethod loginMethod(Jwt jwt) {
+        return LoginMethod.fromClaim(jwt.getClaimAsString("login_method"));
     }
 
     private User current(Jwt jwt) {

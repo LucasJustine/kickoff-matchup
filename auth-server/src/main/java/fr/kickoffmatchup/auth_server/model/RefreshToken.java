@@ -1,5 +1,6 @@
 package fr.kickoffmatchup.auth_server.model;
 
+import fr.kickoffmatchup.auth_server.enums.LoginMethod;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -44,9 +45,13 @@ public class RefreshToken {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "login_method", length = 16)
+    private LoginMethod loginMethod;
+
     public RefreshToken(Long id, String tokenHash, User user, String familyId,
                         Instant expiresAt, Instant revokedAt, boolean rotated,
-                        LocalDateTime createdAt) {
+                        LocalDateTime createdAt, LoginMethod loginMethod) {
         this.id = id;
         this.tokenHash = tokenHash;
         this.user = user;
@@ -55,5 +60,6 @@ public class RefreshToken {
         this.revokedAt = revokedAt;
         this.rotated = rotated;
         this.createdAt = createdAt;
+        this.loginMethod = loginMethod;
     }
 }

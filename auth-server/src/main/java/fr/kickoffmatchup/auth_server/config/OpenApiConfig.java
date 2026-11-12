@@ -28,6 +28,7 @@ public class OpenApiConfig {
                 "/auth/me",
                 "/auth/me/mfa",
                 "/auth/me/password",
+                "/auth/me/password-link",
                 "/auth/me/email",
                 "/auth/confirm-email-change",
                 "/auth/me/delete")

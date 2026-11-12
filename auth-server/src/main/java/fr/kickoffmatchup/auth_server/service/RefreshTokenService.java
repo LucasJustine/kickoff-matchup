@@ -1,5 +1,6 @@
 package fr.kickoffmatchup.auth_server.service;
 
+import fr.kickoffmatchup.auth_server.enums.LoginMethod;
 import fr.kickoffmatchup.auth_server.exception.ApiException;
 import fr.kickoffmatchup.auth_server.model.RefreshToken;
 import fr.kickoffmatchup.auth_server.model.User;
@@ -31,11 +32,11 @@ public class RefreshTokenService {
     @Value("${app.jwt.refresh-reuse-leeway-seconds:10}")
     private long leewaySeconds;
 
-    public record Rotation(String refreshToken, User user) {}
+    public record Rotation(String refreshToken, User user, LoginMethod loginMethod) {}
 
     @Transactional
-    public String create(User user) {
-        return createInFamily(user, UUID.randomUUID().toString());
+    public String create(User user, LoginMethod loginMethod) {
+        return createInFamily(user, UUID.randomUUID().toString(), loginMethod);
     }
 
 
@@ -58,7 +59,8 @@ public class RefreshTokenService {
         } else {
             repository.markRotated(token.getId(), now);
         }
-        return new Rotation(createInFamily(token.getUser(), token.getFamilyId()), token.getUser());
+        LoginMethod loginMethod = token.getLoginMethod() == null ? LoginMethod.PASSWORD : token.getLoginMethod();
+        return new Rotation(createInFamily(token.getUser(), token.getFamilyId(), loginMethod), token.getUser(), loginMethod);
     }
 
     @Transactional
@@ -77,7 +79,7 @@ public class RefreshTokenService {
         repository.deleteAllForUser(user);
     }
 
-    private String createInFamily(User user, String familyId) {
+    private String createInFamily(User user, String familyId, LoginMethod loginMethod) {
         byte[] bytes = new byte[32];
         random.nextBytes(bytes);
         String raw = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
@@ -86,6 +88,7 @@ public class RefreshTokenService {
                 .tokenHash(Hashing.sha256Hex(raw))
                 .user(user)
                 .familyId(familyId)
+                .loginMethod(loginMethod)
                 .expiresAt(Instant.now().plus(ttlDays, ChronoUnit.DAYS))
                 .build());
         return raw;

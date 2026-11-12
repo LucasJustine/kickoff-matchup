@@ -1,6 +1,7 @@
 package fr.kickoffmatchup.auth_server.service;
 
 import fr.kickoffmatchup.auth_server.dto.AuthDtos.RegisterRequest;
+import fr.kickoffmatchup.auth_server.enums.LoginMethod;
 import fr.kickoffmatchup.auth_server.enums.TokenType;
 import fr.kickoffmatchup.auth_server.exception.ApiException;
 import fr.kickoffmatchup.auth_server.mail.EmailService;
@@ -107,7 +108,10 @@ public class AuthService {
     }
 
     @Transactional
-    public User setMfa(User user, boolean enabled, String currentPassword) {
+    public User setMfa(User user, boolean enabled, String currentPassword, LoginMethod loginMethod) {
+        if (loginMethod != LoginMethod.PASSWORD) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "MFA_UNAVAILABLE_WITH_PROVIDER");
+        }
         boolean hasPassword = user.getPassword() != null;
         if (enabled && !hasPassword) {
             throw new ApiException(HttpStatus.FORBIDDEN, "PASSWORD_REQUIRED_FOR_MFA");
@@ -129,10 +133,21 @@ public class AuthService {
 
     @Transactional
     public void changePassword(User user, String currentPassword, String newPassword) {
+        if (user.getPassword() == null) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "PASSWORD_NOT_SET");
+        }
         requireCurrentPassword(user, currentPassword);
         user.setPassword(encoder.encode(newPassword));
         users.save(user);
         refreshTokens.revokeAll(user);
+    }
+
+    @Transactional
+    public void requestPasswordLink(User user) {
+        if (user.getPassword() != null) {
+            throw new ApiException(HttpStatus.CONFLICT, "PASSWORD_ALREADY_SET");
+        }
+        emails.sendSetPassword(user.getEmail(), user.getFirstName(), tokens.create(user, TokenType.PASSWORD_RESET, RESET_TTL));
     }
 
     @Transactional

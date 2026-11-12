@@ -1,5 +1,6 @@
 package fr.kickoffmatchup.auth_server.jwt;
 
+import fr.kickoffmatchup.auth_server.enums.LoginMethod;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
@@ -28,7 +29,7 @@ public class JwtIssuer {
     @Value("${app.jwt.ttl-seconds:600}")
     private long ttlSeconds;
 
-    public String issue(Long userId, String email) {
+    public String issue(Long userId, String email, LoginMethod loginMethod) {
         Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer(issuer)
@@ -39,6 +40,7 @@ public class JwtIssuer {
                 .expiresAt(now.plusSeconds(ttlSeconds))
                 .claim("email", email)
                 .claim("roles", List.of("USER"))
+                .claim("login_method", loginMethod.name())
                 .build();
 
         JwsHeader header = JwsHeader.with(SignatureAlgorithm.RS256).build();

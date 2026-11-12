@@ -1,5 +1,6 @@
 package fr.kickoffmatchup.auth_server.dto;
 
+import fr.kickoffmatchup.auth_server.enums.LoginMethod;
 import fr.kickoffmatchup.auth_server.enums.LoginStatus;
 import fr.kickoffmatchup.auth_server.model.User;
 import jakarta.validation.constraints.NotBlank;
@@ -9,9 +10,11 @@ import jakarta.validation.constraints.Size;
 public final class ApiDtos {
     private ApiDtos() {}
 
-    public record UserDto(Long id, String email, String firstName, String lastName, boolean mfaEnabled) {
-        public static UserDto from(User u) {
-            return new UserDto(u.getId(), u.getEmail(), u.getFirstName(), u.getLastName(), u.isMfaEnabled());
+    public record UserDto(Long id, String email, String firstName, String lastName, boolean mfaEnabled,
+                          boolean hasPassword, String loginMethod) {
+        public static UserDto from(User u, LoginMethod loginMethod) {
+            return new UserDto(u.getId(), u.getEmail(), u.getFirstName(), u.getLastName(), u.isMfaEnabled(),
+                    u.getPassword() != null, loginMethod.name());
         }
     }
 
