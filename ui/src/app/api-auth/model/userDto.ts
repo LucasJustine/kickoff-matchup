@@ -15,5 +15,7 @@ export interface UserDto {
     firstName?: string;
     lastName?: string;
     mfaEnabled?: boolean;
+    hasPassword?: boolean;
+    loginMethod?: string;
 }
 
