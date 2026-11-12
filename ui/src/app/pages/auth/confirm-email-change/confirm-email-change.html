@@ -1,0 +1,21 @@
+<h2>{{ 'auth.emailChange.title' | translate }}</h2>
+
+<div class="max-w-sm">
+  @switch (status()) {
+    @case ('loading') {
+      <p>{{ 'auth.emailChange.checking' | translate }}</p>
+    }
+    @case ('ok') {
+      <nz-alert nzType="success" nzShowIcon [nzMessage]="'auth.emailChange.ok' | translate" />
+      @if (authenticated()) {
+        <p><a routerLink="/profile">{{ 'app.nav.profile' | translate }}</a></p>
+      } @else {
+        <p><a routerLink="/auth/login">{{ 'common.signIn' | translate }}</a></p>
+      }
+    }
+    @case ('error') {
+      <nz-alert nzType="error" nzShowIcon [nzMessage]="error() | translate" />
+      <p><a routerLink="/welcome">{{ 'notFound.back' | translate }}</a></p>
+    }
+  }
+</div>

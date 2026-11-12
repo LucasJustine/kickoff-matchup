@@ -1,0 +1,243 @@
+<div class="w-full">
+  <h2>{{ 'profile.title' | translate }}</h2>
+
+  @if (error()) {
+    <nz-alert class="block mb-4" nzType="error" nzShowIcon [nzMessage]="error() | translate" />
+  }
+
+  @if (user(); as u) {
+    <nz-tabs>
+      <nz-tab [nzTitle]="'profile.tabs.identity' | translate">
+        <div class="max-w-2xl">
+          <nz-card [nzTitle]="'profile.identity.title' | translate">
+            <div class="mb-4 flex items-center gap-4">
+              <nz-avatar [nzSize]="64" [nzText]="initials()" />
+              <div class="min-w-0">
+                <div class="text-lg font-semibold">{{ u.firstName }} {{ u.lastName }}</div>
+                <div class="break-all">{{ u.email }}</div>
+                <button nz-button nzType="link" nzSize="small" type="button" class="px-0!" (click)="openEmailModal()">
+                  {{ 'profile.email.change' | translate }}
+                </button>
+              </div>
+            </div>
+            @if (emailInfo()) {
+              <nz-alert
+                class="block mb-4"
+                nzType="success"
+                nzShowIcon
+                [nzMessage]="emailInfo() | translate: { email: pendingEmail() }"
+              />
+            }
+            @if (identityInfo()) {
+              <nz-alert class="block mb-4" nzType="success" nzShowIcon [nzMessage]="identityInfo() | translate" />
+            }
+            @if (identityError()) {
+              <nz-alert class="block mb-4" nzType="error" nzShowIcon [nzMessage]="identityError() | translate" />
+            }
+            <form nz-form nzLayout="vertical" [formGroup]="identityForm" (ngSubmit)="saveIdentity()">
+              <div class="grid grid-cols-1 gap-x-4 md:grid-cols-2">
+                <nz-form-item>
+                  <nz-form-label nzFor="firstName">{{ 'common.firstName' | translate }}</nz-form-label>
+                  <nz-form-control [nzErrorTip]="fieldError(identityForm.controls.firstName)">
+                    <input nz-input id="firstName" formControlName="firstName" autocomplete="given-name" />
+                  </nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                  <nz-form-label nzFor="lastName">{{ 'common.lastName' | translate }}</nz-form-label>
+                  <nz-form-control [nzErrorTip]="fieldError(identityForm.controls.lastName)">
+                    <input nz-input id="lastName" formControlName="lastName" autocomplete="family-name" />
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
+              <button nz-button nzType="primary" type="submit" [nzLoading]="savingIdentity()" [disabled]="identityForm.pristine">
+                {{ 'common.save' | translate }}
+              </button>
+            </form>
+          </nz-card>
+
+        </div>
+      </nz-tab>
+      <nz-tab [nzTitle]="'profile.tabs.security' | translate">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <nz-card [nzTitle]="'profile.mfa.title' | translate">
+            <p>
+              {{ 'profile.mfa.description' | translate }}
+              @if (u.mfaEnabled) {
+                <nz-tag nzColor="success">{{ 'profile.mfa.enabled' | translate }}</nz-tag>
+              } @else {
+                <nz-tag>{{ 'profile.mfa.disabled' | translate }}</nz-tag>
+              }
+            </p>
+            @if (mfaBlocked()) {
+              <nz-alert
+                nzType="info"
+                nzShowIcon
+                [nzMessage]="(u.hasPassword ? 'profile.mfa.providerBlocked' : 'profile.mfa.providerNeedsPassword') | translate"
+              />
+            } @else if (u.mfaEnabled) {
+              <button nz-button type="button" [nzLoading]="savingMfa()" (click)="toggleMfa(false)">
+                {{ 'profile.mfa.disable' | translate }}
+              </button>
+            } @else {
+              <button nz-button nzType="primary" type="button" [nzLoading]="savingMfa()" (click)="toggleMfa(true)">
+                {{ 'profile.mfa.enable' | translate }}
+              </button>
+            }
+          </nz-card>
+
+          <nz-card [nzTitle]="'profile.password.title' | translate">
+            @if (u.hasPassword) {
+              <p>{{ 'profile.password.hint' | translate }}</p>
+              @if (passwordError()) {
+                <nz-alert class="block mb-4" nzType="error" nzShowIcon [nzMessage]="passwordError() | translate" />
+              }
+              <form nz-form nzLayout="vertical" [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+                <nz-form-item>
+                  <nz-form-label nzFor="currentPassword">{{ 'profile.password.current' | translate }}</nz-form-label>
+                  <nz-form-control [nzErrorTip]="fieldError(passwordForm.controls.currentPassword)">
+                    <input nz-input id="currentPassword" type="password" formControlName="currentPassword" autocomplete="current-password" />
+                  </nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                  <nz-form-label nzFor="newPassword">{{ 'profile.password.new' | translate }}</nz-form-label>
+                  <nz-form-control [nzErrorTip]="fieldError(passwordForm.controls.newPassword)">
+                    <input nz-input id="newPassword" type="password" formControlName="newPassword" autocomplete="new-password" />
+                  </nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                  <nz-form-label nzFor="confirm">{{ 'profile.password.confirm' | translate }}</nz-form-label>
+                  <nz-form-control [nzErrorTip]="fieldError(passwordForm.controls.confirm)">
+                    <input nz-input id="confirm" type="password" formControlName="confirm" autocomplete="new-password" />
+                  </nz-form-control>
+                </nz-form-item>
+                <button nz-button nzType="primary" type="submit" [nzLoading]="savingPassword()">
+                  {{ 'profile.password.submit' | translate }}
+                </button>
+              </form>
+            } @else {
+              <p>{{ 'profile.password.none' | translate }}</p>
+              @if (passwordError()) {
+                <nz-alert class="block mb-4" nzType="error" nzShowIcon [nzMessage]="passwordError() | translate" />
+              }
+              @if (passwordLinkSent()) {
+                <nz-alert nzType="success" nzShowIcon [nzMessage]="'profile.password.linkSent' | translate: { email: u.email }" />
+              } @else {
+                <button nz-button nzType="primary" type="button" [nzLoading]="sendingPasswordLink()" (click)="sendPasswordLink()">
+                  {{ 'profile.password.sendLink' | translate }}
+                </button>
+              }
+            }
+          </nz-card>
+
+        </div>
+      </nz-tab>
+      <nz-tab [nzTitle]="'profile.tabs.account' | translate">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <nz-card [nzTitle]="'profile.session.title' | translate">
+            <p>{{ 'profile.session.description' | translate }}</p>
+            <button nz-button type="button" [nzLoading]="loggingOut()" (click)="logout()">
+              {{ 'profile.session.logout' | translate }}
+            </button>
+          </nz-card>
+
+          <nz-card [nzTitle]="'profile.delete.title' | translate">
+            <p>{{ 'profile.delete.description' | translate }}</p>
+            <button nz-button nzDanger type="button" (click)="openDeleteModal()">
+              {{ 'profile.delete.button' | translate }}
+            </button>
+          </nz-card>
+        </div>
+      </nz-tab>
+    </nz-tabs>
+
+    <nz-modal
+      nzCentered
+      [nzVisible]="mfaModalOpen()"
+      [nzTitle]="'profile.mfa.disable' | translate"
+      [nzOkText]="'profile.mfa.disableConfirm' | translate"
+      [nzCancelText]="'common.cancel' | translate"
+      [nzOkLoading]="savingMfa()"
+      (nzOnOk)="confirmDisableMfa()"
+      (nzOnCancel)="cancelDisableMfa()"
+    >
+      <ng-container *nzModalContent>
+        @if (mfaModalError()) {
+          <nz-alert class="block mb-4" nzType="error" nzShowIcon [nzMessage]="mfaModalError() | translate" />
+        }
+        <form nz-form nzLayout="vertical" [formGroup]="mfaForm" (ngSubmit)="confirmDisableMfa()">
+          <nz-form-item>
+            <nz-form-label nzFor="mfaPassword">{{ 'common.password' | translate }}</nz-form-label>
+            <nz-form-control [nzErrorTip]="fieldError(mfaForm.controls.password)">
+              <input nz-input id="mfaPassword" type="password" formControlName="password" autocomplete="current-password" />
+            </nz-form-control>
+          </nz-form-item>
+          <button type="submit" class="sr-only" tabindex="-1" aria-hidden="true"></button>
+        </form>
+      </ng-container>
+    </nz-modal>
+
+    <nz-modal
+      nzCentered
+      [nzVisible]="emailModalOpen()"
+      [nzTitle]="'profile.email.modalTitle' | translate"
+      [nzOkText]="'profile.email.submit' | translate"
+      [nzCancelText]="'common.cancel' | translate"
+      [nzOkLoading]="savingEmail()"
+      (nzOnOk)="submitEmailChange()"
+      (nzOnCancel)="cancelEmailModal()"
+    >
+      <ng-container *nzModalContent>
+        <p>{{ 'profile.email.hint' | translate }}</p>
+        @if (emailModalError()) {
+          <nz-alert class="block mb-4" nzType="error" nzShowIcon [nzMessage]="emailModalError() | translate" />
+        }
+        <form nz-form nzLayout="vertical" [formGroup]="emailForm" (ngSubmit)="submitEmailChange()">
+          <nz-form-item>
+            <nz-form-label nzFor="newEmail">{{ 'profile.email.new' | translate }}</nz-form-label>
+            <nz-form-control [nzErrorTip]="fieldError(emailForm.controls.newEmail)">
+              <input nz-input id="newEmail" type="email" formControlName="newEmail" autocomplete="email" />
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-label nzFor="emailPassword">{{ 'common.password' | translate }}</nz-form-label>
+            <nz-form-control [nzErrorTip]="fieldError(emailForm.controls.password)">
+              <input nz-input id="emailPassword" type="password" formControlName="password" autocomplete="current-password" />
+            </nz-form-control>
+          </nz-form-item>
+          <button type="submit" class="sr-only" tabindex="-1" aria-hidden="true"></button>
+        </form>
+      </ng-container>
+    </nz-modal>
+
+    <nz-modal
+      nzCentered
+      [nzVisible]="deleteModalOpen()"
+      [nzTitle]="'profile.delete.title' | translate"
+      [nzOkText]="'profile.delete.confirm' | translate"
+      [nzCancelText]="'common.cancel' | translate"
+      nzOkDanger
+      [nzOkLoading]="deleting()"
+      [nzOkDisabled]="deleteForm.invalid"
+      (nzOnOk)="deleteAccount()"
+      (nzOnCancel)="cancelDelete()"
+    >
+      <ng-container *nzModalContent>
+        <p>{{ 'profile.delete.confirmPrompt' | translate }}</p>
+        @if (deleteError()) {
+          <nz-alert class="block mb-4" nzType="error" nzShowIcon [nzMessage]="deleteError() | translate" />
+        }
+        <form nz-form nzLayout="vertical" [formGroup]="deleteForm" (ngSubmit)="deleteAccount()">
+          <nz-form-item>
+            <nz-form-label nzFor="deletePassword">{{ 'common.password' | translate }}</nz-form-label>
+            <nz-form-control [nzErrorTip]="fieldError(deleteForm.controls.password)">
+              <input nz-input id="deletePassword" type="password" formControlName="password" autocomplete="current-password" />
+            </nz-form-control>
+          </nz-form-item>
+          <button type="submit" class="sr-only" tabindex="-1" aria-hidden="true"></button>
+        </form>
+      </ng-container>
+    </nz-modal>
+  } @else if (loading()) {
+    <p>{{ 'common.loading' | translate }}</p>
+  }
+</div>

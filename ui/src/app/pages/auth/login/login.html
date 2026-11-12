@@ -1,0 +1,102 @@
+<div class="flex flex-col items-center justify-center">
+  <h2>{{ 'auth.login.title' | translate }}</h2>
+
+  <div class="max-w-md w-full">
+    @if (error()) {
+      <nz-alert nzType="error" nzShowIcon [nzMessage]="error() | translate" />
+    }
+    @if (info()) {
+      <nz-alert class="mb-4 block" nzType="success" nzShowIcon [nzMessage]="info() | translate" />
+    }
+    @if (emailNotVerified()) {
+      <p><a routerLink="/auth/resend-verification">{{ 'auth.login.resendVerification' | translate }}</a></p>
+    }
+
+    @if (!challengeId()) {
+      @for (provider of providers(); track provider.id) {
+        <social-login-button [provider]="provider" (signIn)="loginWithProvider(provider)" />
+      }
+        <div class="mt-4">
+            <form nz-form nzLayout="vertical" [formGroup]="form" (ngSubmit)="submit()">
+            <nz-form-item>
+                <nz-form-label nzFor="email">{{ 'common.email' | translate }}</nz-form-label>
+                <nz-form-control [nzErrorTip]="fieldError(form.controls.email)">
+                <input
+                    nz-input
+                    id="email"
+                    type="email"
+                    formControlName="email"
+                    autocomplete="username"
+                />
+                </nz-form-control>
+            </nz-form-item>
+
+            <nz-form-item>
+                <nz-form-label nzFor="password">{{ 'common.password' | translate }}</nz-form-label>
+                <nz-form-control [nzErrorTip]="fieldError(form.controls.password)">
+                <input
+                    nz-input
+                    id="password"
+                    type="password"
+                    formControlName="password"
+                    autocomplete="current-password"
+                />
+                </nz-form-control>
+            </nz-form-item>
+
+            <button nz-button nzType="primary" nzBlock type="submit" [nzLoading]="loading()">
+                {{ 'auth.login.submit' | translate }}
+            </button>
+            </form>
+        </div>
+
+      <p><a routerLink="/forgot-password">{{ 'auth.login.forgotPassword' | translate }}</a></p>
+      <p>
+        {{ 'auth.login.noAccount' | translate }}
+        <a routerLink="/auth/register" queryParamsHandling="preserve">{{ 'auth.login.createAccount' | translate }}</a>
+      </p>
+    } @else {
+      <p>{{ 'auth.mfa.intro' | translate }}</p>
+      <form nz-form nzLayout="vertical" [formGroup]="mfaForm" (ngSubmit)="submitMfa()">
+        <nz-form-item>
+          <nz-form-label nzFor="code">{{ 'auth.mfa.code' | translate }}</nz-form-label>
+          <nz-form-control [nzErrorTip]="fieldError(mfaForm.controls.code)">
+            <input
+              nz-input
+              id="code"
+              inputmode="numeric"
+              maxlength="6"
+              formControlName="code"
+              autocomplete="one-time-code"
+            />
+          </nz-form-control>
+        </nz-form-item>
+
+        <button nz-button nzType="primary" nzBlock type="submit" [nzLoading]="loading()">
+          {{ 'auth.mfa.submit' | translate }}
+        </button>
+      </form>
+
+      <div class="mt-4 flex flex-col items-center gap-2">
+        @if (resendsExhausted()) {
+          <a href="#" (click)="$event.preventDefault(); leaveMfa()">{{ 'auth.mfa.backToLogin' | translate }}</a>
+        } @else {
+          <button
+            nz-button
+            nzType="default"
+            nzBlock
+            type="button"
+            [disabled]="resendIn() > 0 || loading()"
+            (click)="resendMfa()"
+          >
+            @if (resendIn() > 0) {
+              {{ 'auth.mfa.resendCountdown' | translate: { seconds: resendIn() } }}
+            } @else {
+              {{ 'auth.mfa.resend' | translate }}
+            }
+          </button>
+        }
+      </div>
+    }
+  </div>
+</div>

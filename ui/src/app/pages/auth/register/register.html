@@ -1,0 +1,57 @@
+<h2>{{ 'auth.register.title' | translate }}</h2>
+
+<div class="max-w-sm">
+  @if (sent()) {
+    <nz-alert
+      nzType="success"
+      nzShowIcon
+      [nzMessage]="'auth.register.sentTitle' | translate"
+      [nzDescription]="'auth.register.sentDescription' | translate"
+    />
+    <p><a routerLink="/auth/login">{{ 'common.signIn' | translate }}</a> · <a routerLink="/auth/resend-verification">{{ 'auth.register.emailNotReceived' | translate }}</a></p>
+  } @else {
+    @if (error()) {
+      <nz-alert nzType="error" nzShowIcon [nzMessage]="error() | translate" />
+    }
+    <form nz-form nzLayout="vertical" [formGroup]="form" (ngSubmit)="submit()">
+      <nz-form-item>
+        <nz-form-label nzFor="firstName">{{ 'common.firstName' | translate }}</nz-form-label>
+        <nz-form-control [nzErrorTip]="fieldError(form.controls.firstName)">
+          <input nz-input id="firstName" formControlName="firstName" autocomplete="given-name" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzFor="lastName">{{ 'common.lastName' | translate }}</nz-form-label>
+        <nz-form-control [nzErrorTip]="fieldError(form.controls.lastName)">
+          <input nz-input id="lastName" formControlName="lastName" autocomplete="family-name" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzFor="email">{{ 'common.email' | translate }}</nz-form-label>
+        <nz-form-control [nzErrorTip]="fieldError(form.controls.email)">
+          <input nz-input id="email" type="email" formControlName="email" autocomplete="email" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzFor="password">{{ 'common.password' | translate }}</nz-form-label>
+        <nz-form-control [nzErrorTip]="fieldError(form.controls.password)">
+          <input nz-input id="password" type="password" formControlName="password" autocomplete="new-password" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzFor="confirm">{{ 'auth.register.confirmPassword' | translate }}</nz-form-label>
+        <nz-form-control [nzErrorTip]="fieldError(form.controls.confirm)">
+          <input nz-input id="confirm" type="password" formControlName="confirm" autocomplete="new-password" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <button nz-button nzType="primary" nzBlock type="submit" [nzLoading]="loading()">{{ 'auth.register.submit' | translate }}</button>
+    </form>
+
+    <p>{{ 'auth.register.alreadyRegistered' | translate }} <a routerLink="/auth/login">{{ 'common.signIn' | translate }}</a></p>
+  }
+</div>

@@ -1,0 +1,17 @@
+<h2>{{ 'auth.verify.title' | translate }}</h2>
+
+<div class="max-w-sm">
+  @switch (status()) {
+    @case ('loading') {
+      <p>{{ 'auth.verify.checking' | translate }}</p>
+    }
+    @case ('ok') {
+      <nz-alert nzType="success" nzShowIcon [nzMessage]="'auth.verify.ok' | translate" />
+      <p><a routerLink="/auth/login">{{ 'common.signIn' | translate }}</a></p>
+    }
+    @case ('error') {
+      <nz-alert nzType="error" nzShowIcon [nzMessage]="error() | translate" />
+      <p><a routerLink="/auth/resend-verification">{{ 'auth.verify.newLink' | translate }}</a></p>
+    }
+  }
+</div>

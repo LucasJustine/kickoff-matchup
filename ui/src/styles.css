@@ -1,0 +1,8 @@
+
+@import 'tailwindcss';
+
+html.modal-open {
+  overflow: hidden;
+}
+
+.ant-modal { transform-origin: 50% 50% !important; }

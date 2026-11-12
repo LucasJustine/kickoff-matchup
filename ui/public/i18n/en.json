@@ -1,0 +1,197 @@
+{
+  "app": {
+    "title": "Kickoff Matchup",
+    "nav": {
+      "home": "Home",
+      "login": "Sign in",
+      "profile": "Profile",
+      "label": "Main navigation",
+      "open": "Open menu",
+      "close": "Close menu",
+      "logout": "Sign out",
+      "language": "Language",
+      "account": "User account"
+    }
+  },
+  "common": {
+    "email": "Email",
+    "password": "Password",
+    "loading": "Loading…",
+    "cancel": "Cancel",
+    "backToLogin": "Back to sign in",
+    "signIn": "Sign in",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "save": "Save"
+  },
+  "validation": {
+    "required": "Required field",
+    "email": "Invalid email",
+    "minlength": "Minimum {{count}} characters",
+    "maxlength": "Maximum {{count}} characters",
+    "pattern": "Invalid format",
+    "mismatch": "Passwords do not match",
+    "invalid": "Invalid value"
+  },
+  "errors": {
+    "generic": "Something went wrong.",
+    "invalidLink": "Invalid link.",
+    "INVALID_CREDENTIALS": "Incorrect email or password.",
+    "EMAIL_NOT_VERIFIED": "Your email isn't verified yet.",
+    "INVALID_TOKEN": "This link is invalid, expired or already used.",
+    "MFA_INVALID_CODE": "Incorrect code.",
+    "MFA_CODE_EXPIRED": "This code has expired. Request a new one.",
+    "MFA_TOO_MANY_ATTEMPTS": "Too many attempts. Request a new code.",
+    "MFA_RESEND_TOO_SOON": "Wait a few seconds before requesting a new code.",
+    "MFA_TOO_MANY_RESENDS": "Maximum number of resends reached. Sign in again.",
+    "MFA_CHALLENGE_EXPIRED": "Verification has expired. Sign in again.",
+    "INVALID_REFRESH_TOKEN": "Session expired. Sign in again.",
+    "UNAUTHENTICATED": "Session expired. Sign in again.",
+    "UNSUPPORTED_PROVIDER": "Unsupported sign-in provider.",
+    "INVALID_SOCIAL_TOKEN": "Sign-in through the provider was refused.",
+    "OAUTH_EMAIL_NOT_VERIFIED": "Your account email isn't verified with the provider.",
+    "SOCIAL_PROVIDER_UNAVAILABLE": "Provider unavailable, try again later.",
+    "INVALID_CURRENT_PASSWORD": "Incorrect password.",
+    "PASSWORD_REQUIRED_FOR_MFA": "Set a password before enabling two-factor authentication.",
+    "VALIDATION_ERROR": "Some fields are invalid.",
+    "TOO_MANY_REQUESTS": "Too many attempts. Try again in a minute.",
+    "MAIL_QUEUE_UNAVAILABLE": "The email couldn't be sent. Try again in a moment.",
+    "AUTH_SERVER_UNAVAILABLE": "The sign-in service is unavailable. Try again in a moment.",
+    "AUTH_SERVER_ERROR": "The sign-in service ran into an error. Try again.",
+    "NETWORK_ERROR": "Can't reach the server. Check your connection.",
+    "EMAIL_UNCHANGED": "This is already your current address.",
+    "EMAIL_ALREADY_USED": "This address is already in use.",
+    "PASSWORD_REQUIRED_FOR_EMAIL_CHANGE": "Set a password first (using \"Forgot password\").",
+    "MFA_UNAVAILABLE_WITH_PROVIDER": "Two-factor authentication is not available when you are signed in through a provider.",
+    "PASSWORD_NOT_SET": "Your account has no password: use \"Send the link\".",
+    "PASSWORD_ALREADY_SET": "Your account already has a password."
+  },
+  "auth": {
+    "continueWith": "Continue with",
+    "login": {
+      "title": "Sign in",
+      "submit": "Sign in",
+      "forgotPassword": "Forgot your password?",
+      "noAccount": "Don't have an account yet?",
+      "createAccount": "Create an account",
+      "resendVerification": "Resend the confirmation email",
+      "passwordChanged": "Password changed. Sign in again."
+    },
+    "mfa": {
+      "intro": "A 6-digit code has just been sent to you by email (valid for 5 minutes).",
+      "code": "Code",
+      "submit": "Verify",
+      "resend": "Resend code",
+      "resendCountdown": "Resend code ({{seconds}} s)",
+      "resent": "A new code has been sent to you. The previous one is no longer valid.",
+      "backToLogin": "Back to sign in"
+    },
+    "register": {
+      "title": "Create an account",
+      "confirmPassword": "Confirm password",
+      "submit": "Create my account",
+      "sentTitle": "Almost done!",
+      "sentDescription": "If this address can be used, a confirmation email has just been sent (link valid for 24 h).",
+      "emailNotReceived": "Didn't get the email?",
+      "alreadyRegistered": "Already registered?"
+    },
+    "forgot": {
+      "title": "Forgot password",
+      "hint": "Enter your email to receive a reset link.",
+      "button": "Send link",
+      "done": "If an account exists for this address, a reset email has just been sent (link valid for 1 h)."
+    },
+    "resendVerification": {
+      "title": "Resend the confirmation email",
+      "hint": "Enter the email you signed up with.",
+      "button": "Resend",
+      "done": "If this account exists and isn't verified yet, a new email has just been sent (link valid for 24 h)."
+    },
+    "reset": {
+      "title": "New password",
+      "newPassword": "New password",
+      "confirm": "Confirm",
+      "submit": "Change password",
+      "doneTitle": "Password changed",
+      "doneDescription": "All your sessions have been signed out. You can sign in again.",
+      "requestNewLink": "Request a new link"
+    },
+    "verify": {
+      "title": "Email confirmation",
+      "checking": "Verifying…",
+      "ok": "Email confirmed, your account is active.",
+      "newLink": "Get a new link"
+    },
+    "emailChange": {
+      "title": "Email address change",
+      "checking": "Confirming…",
+      "ok": "Your email address has been changed."
+    }
+  },
+  "profile": {
+    "title": "My profile",
+    "identity": {
+      "title": "Personal information",
+      "saved": "Information updated."
+    },
+    "mfa": {
+      "title": "Two-factor authentication",
+      "description": "A 6-digit code is emailed to you at each sign-in.",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "enable": "Enable two-factor authentication",
+      "disable": "Disable two-factor authentication",
+      "disableConfirm": "Disable",
+      "providerBlocked": "Two-factor authentication is not available when you are signed in through a provider (such as Google). Sign in with your password to manage it.",
+      "providerNeedsPassword": "Two-factor authentication is not available when you are signed in through a provider (such as Google). Set a password first, then sign in with it to manage this."
+    },
+    "password": {
+      "title": "Password",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "submit": "Change password",
+      "hint": "After the change, you will be signed out of all your devices.",
+      "none": "Your account has no password yet: you sign in through a provider (such as Google). Set one to also be able to sign in with your email.",
+      "sendLink": "Send the link to set a password",
+      "linkSent": "An email was sent to {{email}}. After you set your password, you will be signed out and can sign in again."
+    },
+    "session": {
+      "title": "Session",
+      "description": "You will be signed out of this device.",
+      "logout": "Sign out"
+    },
+    "delete": {
+      "title": "Delete my account",
+      "description": "This can't be undone: your account and data will be deleted.",
+      "button": "Delete my account",
+      "confirmPrompt": "Enter your password to confirm the deletion.",
+      "confirm": "Delete permanently"
+    },
+    "tabs": {
+      "identity": "Details",
+      "security": "Security",
+      "account": "Account"
+    },
+    "email": {
+      "change": "Change email address",
+      "modalTitle": "Change email address",
+      "new": "New email address",
+      "hint": "A confirmation link will be sent to this address. Your current address stays valid until you confirm.",
+      "submit": "Send confirmation link",
+      "sent": "A confirmation email was sent to {{email}}. Your address only changes once you click the link."
+    }
+  },
+  "home": {
+    "title": "Find an opponent, set the kickoff.",
+    "lead": "Kickoff Matchup connects amateur football teams so they can organise their matches.",
+    "register": "Create an account",
+    "greeting": "Hello {{name}}",
+    "profile": "My profile"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "text": "This page doesn't exist or has been moved.",
+    "back": "Back to home"
+  }
+}
