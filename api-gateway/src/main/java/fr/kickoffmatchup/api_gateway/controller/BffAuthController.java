@@ -124,7 +124,8 @@ public class BffAuthController {
     private record RefreshRequest(String refreshToken) {
     }
 
-    private record UserDto(Long id, String email, String firstName, String lastName, boolean mfaEnabled) {
+    private record UserDto(Long id, String email, String firstName, String lastName, boolean mfaEnabled,
+                           boolean hasPassword, String loginMethod) {
     }
 
     private record TokenPair(String accessToken, String refreshToken, String tokenType, long expiresIn) {

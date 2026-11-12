@@ -33,6 +33,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             "/bff/auth/forgot-password",
             "/bff/auth/resend-verification",
             "/bff/auth/me/email",
+            "/bff/auth/me/password-link",
             "/bff/auth/confirm-email-change");
 
     private final StringRedisTemplate redis;
