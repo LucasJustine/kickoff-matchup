@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::title}, ~{::section})}">
+<head><title th:text="${subject}">Mail</title></head>
+<body>
+<section>
+<p th:text="#{mfa-code.body}">...</p>
+<p class="code" th:text="${code}">123456</p>
+<p th:text="#{mfa-code.validity}">...</p>
+<p class="muted" th:text="#{mfa-code.ignore}">...</p>
+</section>
+</body>
+</html>

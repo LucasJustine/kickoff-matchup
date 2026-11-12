@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::title}, ~{::section})}">
+<head><title th:text="${subject}">Mail</title></head>
+<body>
+<section>
+<p th:text="#{common.greeting(${firstName})}">Bonjour,</p>
+<p th:text="#{verify-email.body}">...</p>
+<p><a class="btn" th:href="${link}" href="#" th:text="#{verify-email.cta}">Confirmer</a></p>
+<p class="muted" th:text="#{common.ignore}">...</p>
+</section>
+</body>
+</html>

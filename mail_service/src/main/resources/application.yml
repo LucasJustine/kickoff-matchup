@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: mail_service
+
+  config:
+    import: optional:file:.env[.properties]
+
+  messages:                              # textes des mails : messages.properties (défaut), messages_en.properties...
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false     # langue inconnue -> messages.properties, pas la langue du serveur
+    always-use-message-format: true      # cohérent partout : apostrophe doublée ('') dans les .properties
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD} 
+    listener:
+      simple:
+        default-requeue-rejected: false  
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 2s
+          multiplier: 2.0
+          max-interval: 10s
+
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${MAIL_STARTTLS:false}
+
+
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost}
+  
+  mail:
+    from: ${MAIL_FROM:no-reply@kickoffmatchup.fr}
+    default-locale: ${MAIL_DEFAULT_LOCALE:fr}
+    
+    
