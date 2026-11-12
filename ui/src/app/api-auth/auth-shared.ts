@@ -37,6 +37,9 @@ const KNOWN_CODES = new Set([
     'EMAIL_UNCHANGED',
     'EMAIL_ALREADY_USED',
     'PASSWORD_REQUIRED_FOR_EMAIL_CHANGE',
+    'MFA_UNAVAILABLE_WITH_PROVIDER',
+    'PASSWORD_NOT_SET',
+    'PASSWORD_ALREADY_SET',
 ]);
 
 export function toApiError(err: unknown): ApiError {
@@ -56,6 +59,7 @@ export function handleApiError(form: FormGroup, err: unknown): string {
             applied = true;
         }
     }
+    
     if (applied) return '';
     if (e.code && KNOWN_CODES.has(e.code)) return `errors.${e.code}`;
     return e.message || 'errors.generic';

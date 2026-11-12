@@ -67,11 +67,14 @@ export class Profile implements OnInit {
         lastName: ['', [Validators.required, Validators.maxLength(100)]],
     });
 
+    protected readonly mfaBlocked = computed(() => this.user()?.loginMethod === 'PROVIDER');
     protected readonly savingMfa = signal(false);
     protected readonly mfaModalOpen = signal(false);
     protected readonly mfaModalError = signal('');
     protected readonly mfaForm = this.fb.group({ password: ['', Validators.required] });
 
+    protected readonly sendingPasswordLink = signal(false);
+    protected readonly passwordLinkSent = signal(false);
     protected readonly savingPassword = signal(false);
     protected readonly passwordError = signal('');
     protected readonly passwordForm = this.fb.group({
@@ -203,6 +206,21 @@ export class Profile implements OnInit {
             error: (e) => {
                 this.savingEmail.set(false);
                 this.emailModalError.set(handleApiError(this.emailForm, e));
+            },
+        });
+    }
+
+    protected sendPasswordLink(): void {
+        this.sendingPasswordLink.set(true);
+        this.passwordError.set('');
+        this.api.requestPasswordLink().subscribe({
+            next: () => {
+                this.sendingPasswordLink.set(false);
+                this.passwordLinkSent.set(true);
+            },
+            error: (e) => {
+                this.sendingPasswordLink.set(false);
+                this.passwordError.set(handleApiError(new FormGroup({}), e));
             },
         });
     }

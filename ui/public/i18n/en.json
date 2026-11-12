@@ -61,7 +61,10 @@
     "NETWORK_ERROR": "Can't reach the server. Check your connection.",
     "EMAIL_UNCHANGED": "This is already your current address.",
     "EMAIL_ALREADY_USED": "This address is already in use.",
-    "PASSWORD_REQUIRED_FOR_EMAIL_CHANGE": "Set a password first (using \"Forgot password\")."
+    "PASSWORD_REQUIRED_FOR_EMAIL_CHANGE": "Set a password first (using \"Forgot password\").",
+    "MFA_UNAVAILABLE_WITH_PROVIDER": "Two-factor authentication is not available when you are signed in through a provider.",
+    "PASSWORD_NOT_SET": "Your account has no password: use \"Send the link\".",
+    "PASSWORD_ALREADY_SET": "Your account already has a password."
   },
   "auth": {
     "continueWith": "Continue with",
@@ -138,7 +141,9 @@
       "disabled": "Disabled",
       "enable": "Enable two-factor authentication",
       "disable": "Disable two-factor authentication",
-      "disableConfirm": "Disable"
+      "disableConfirm": "Disable",
+      "providerBlocked": "Two-factor authentication is not available when you are signed in through a provider (such as Google). Sign in with your password to manage it.",
+      "providerNeedsPassword": "Two-factor authentication is not available when you are signed in through a provider (such as Google). Set a password first, then sign in with it to manage this."
     },
     "password": {
       "title": "Password",
@@ -146,7 +151,10 @@
       "new": "New password",
       "confirm": "Confirm new password",
       "submit": "Change password",
-      "hint": "After the change, you will be signed out of all your devices."
+      "hint": "After the change, you will be signed out of all your devices.",
+      "none": "Your account has no password yet: you sign in through a provider (such as Google). Set one to also be able to sign in with your email.",
+      "sendLink": "Send the link to set a password",
+      "linkSent": "An email was sent to {{email}}. After you set your password, you will be signed out and can sign in again."
     },
     "session": {
       "title": "Session",
