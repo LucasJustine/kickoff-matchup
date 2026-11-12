@@ -99,7 +99,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler, 
 
     private void redirectToLogin(HttpServletRequest request, HttpServletResponse response, String code)
             throws IOException {
-        String url = frontendUrl + "/login?error=" + encode(code);
+        String url = frontendUrl + "/auth/login?error=" + encode(code);
         String returnUrl = takeReturnUrl(request);
         if (returnUrl != null) {
             url += "&returnUrl=" + encode(returnUrl);
