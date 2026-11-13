@@ -9,12 +9,17 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
@@ -56,6 +61,23 @@ public class SecurityConfig {
             "/bff/auth/reset-password"
     };
 
+    private static final String[] MOBILE_ENTRY_PATHS = {
+            "/mobile/auth/login",
+            "/mobile/auth/mfa/verify",
+            "/mobile/auth/mfa/resend",
+            "/mobile/auth/refresh",
+            "/mobile/auth/logout",
+            "/mobile/auth/social/**",
+            "/mobile/auth/register",
+            "/mobile/auth/verify-email",
+            "/mobile/auth/resend-verification",
+            "/mobile/auth/confirm-email-change",
+            "/mobile/auth/forgot-password",
+            "/mobile/auth/reset-password"
+    };
+
+    private static final String BEARER_PREFIX = "Bearer ";
+
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
     private final JwtHeaderInjectionFilter jwtHeaderInjectionFilter;
@@ -71,6 +93,25 @@ public class SecurityConfig {
     }
 
     @Bean
+    @Order(1)
+    SecurityFilterChain mobileSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .securityMatcher(SecurityConfig::isMobileRequest)
+            .csrf(AbstractHttpConfigurer::disable)
+            .logout(logout -> logout.disable())
+            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(MOBILE_ENTRY_PATHS).permitAll()
+                .anyRequest().authenticated())
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .bearerTokenResolver(mobileTokenResolver())
+                .jwt(Customizer.withDefaults()))
+            .addFilterBefore(rateLimitFilter, BearerTokenAuthenticationFilter.class);
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(Customizer.withDefaults())
@@ -100,8 +141,8 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Bean
-    BearerTokenResolver sessionTokenResolver() {
+
+    private static BearerTokenResolver sessionTokenResolver() {
         return request -> {
             if (isPublicOrAuthEntry(request.getRequestURI())) {
                 return null;
@@ -109,6 +150,27 @@ public class SecurityConfig {
             Object token = request.getAttribute(SecurityConstants.REQUEST_ACCESS_TOKEN_ATTRIBUTE);
             return token instanceof String accessToken ? accessToken : null;
         };
+    }
+
+    private static boolean isMobileRequest(HttpServletRequest request) {
+        String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
+        return request.getRequestURI().startsWith("/mobile/")
+                || (authorization != null
+                        && authorization.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX.length()));
+    }
+
+    private static BearerTokenResolver mobileTokenResolver() {
+        DefaultBearerTokenResolver headerResolver = new DefaultBearerTokenResolver();
+        return request -> isMobileEntry(request.getRequestURI()) ? null : headerResolver.resolve(request);
+    }
+
+    private static boolean isMobileEntry(String path) {
+        for (String pattern : MOBILE_ENTRY_PATHS) {
+            if (PATH_MATCHER.match(pattern, path)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean isPublicOrAuthEntry(String path) {

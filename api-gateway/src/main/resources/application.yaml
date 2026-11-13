@@ -9,10 +9,10 @@ server:
         secure: ${COOKIE_SECURE:false}
 
 app:
-  frontend-url: ${FRONTEND_URL:http://localhost}
-  auth-server-url: ${AUTH_SERVER_URL:http://localhost:9000}
+  frontend-url: ${FRONTEND_URL}
+  auth-server-url: ${AUTH_SERVER_URL}
   jwt:
-    issuer: ${JWT_ISSUER:https://auth.kickoffmatchup.fr}
+    issuer: ${JWT_ISSUER}
     audience: kickoffmatchup-api
   rate-limit:
     max-requests: 10
@@ -31,12 +31,18 @@ spring:
         server:
           webmvc:
             routes:
-              - id: auth-service-passthrough
-                uri: ${AUTH_SERVER_URL:http://localhost:9000}
+              - id: auth-service-bff
+                uri: ${AUTH_SERVER_URL}
                 predicates:
                   - Path=/bff/auth/register, /bff/auth/verify-email, /bff/auth/resend-verification, /bff/auth/forgot-password, /bff/auth/reset-password, /bff/auth/me, /bff/auth/me/mfa, /bff/auth/me/password, /bff/auth/me/password-link, /bff/auth/me/delete, /bff/auth/me/email, /bff/auth/confirm-email-change, /bff/auth/mfa/resend
                 filters:
                   - RewritePath=/bff/(?<segment>.*), /$\{segment}
+              - id: auth-service-mobile
+                uri: ${AUTH_SERVER_URL}
+                predicates:
+                  - Path=/mobile/auth/**
+                filters:
+                  - RewritePath=/mobile/(?<segment>.*), /$\{segment}
     data:
       redis:
         host: ${REDIS_HOST:localhost}
