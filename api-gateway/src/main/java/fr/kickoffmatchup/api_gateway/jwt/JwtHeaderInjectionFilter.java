@@ -1,7 +1,6 @@
 package fr.kickoffmatchup.api_gateway.jwt;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nimbusds.jwt.SignedJWT;
 
 import fr.kickoffmatchup.api_gateway.security.SecurityConstants;
@@ -15,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.session.Session;
 import org.springframework.session.data.redis.RedisSessionRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
@@ -155,7 +153,6 @@ public class JwtHeaderInjectionFilter extends OncePerRequestFilter {
                     return null;
                 }
                 servletSession.setAttribute(SecurityConstants.SESSION_ACCESS_TOKEN, pair.accessToken());
-                // Le refresh token tourne : on garde le nouveau, sinon le prochain refresh rejouerait l'ancien.
                 if (pair.refreshToken() != null) {
                     servletSession.setAttribute(SecurityConstants.SESSION_REFRESH_TOKEN, pair.refreshToken());
                 }
@@ -204,8 +201,7 @@ public class JwtHeaderInjectionFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Date d'expiration lue dans le JWT, sans valider la signature (le token vient de notre
-     * propre session ; la validation reste faite par le resource server). Null si illisible :
+     * Date d'expiration lue dans le JWT, sans valider la signature. Null si illisible :
      * on ne tente alors pas de refresh et le resource server rejettera le token.
      */
     private Instant expiresAt(String token) {
