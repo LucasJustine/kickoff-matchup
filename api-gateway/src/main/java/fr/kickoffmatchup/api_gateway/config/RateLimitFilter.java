@@ -11,13 +11,18 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.server.PathContainer;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.pattern.PathPattern;
+import org.springframework.web.util.pattern.PathPatternParser;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.Set;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Stream;
 
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
@@ -25,27 +30,20 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final Logger log = LoggerFactory.getLogger(RateLimitFilter.class);
     private static final String KEY_PREFIX = "kickoffmatchup:ratelimit:";
 
-    private static final Set<String> LIMITED_PATHS = Set.of(
-            "/bff/auth/login",
-            "/bff/auth/mfa/verify",
-            "/bff/auth/mfa/resend",
-            "/bff/auth/register",
-            "/bff/auth/forgot-password",
-            "/bff/auth/resend-verification",
-            "/bff/auth/me/email",
-            "/bff/auth/me/password-link",
-            "/bff/auth/confirm-email-change",
-            "/mobile/auth/login",
-            "/mobile/auth/mfa/verify",
-            "/mobile/auth/mfa/resend",
-            "/mobile/auth/register",
-            "/mobile/auth/forgot-password",
-            "/mobile/auth/resend-verification",
-            "/mobile/auth/me/email",
-            "/mobile/auth/me/password-link",
-            "/mobile/auth/confirm-email-change",
-            "/mobile/auth/social/google",
-            "/mobile/auth/refresh");
+    /** Un * remplace un segment du chemin (bff ou mobile, verify ou resend…). */
+    private static final List<PathPattern> LIMITED_PATHS = Stream.of(
+            "/*/auth/login",
+            "/*/auth/mfa/*",
+            "/*/auth/register",
+            "/*/auth/forgot-password",
+            "/*/auth/resend-verification",
+            "/*/auth/confirm-email-change",
+            "/*/auth/me/email",
+            "/*/auth/me/password-link",
+            "/mobile/auth/social/*",
+            "/mobile/auth/refresh")
+            .map(PathPatternParser.defaultInstance::parse)
+            .toList();
 
     private final StringRedisTemplate redis;
     private final int maxRequests;
@@ -61,13 +59,29 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !"POST".equalsIgnoreCase(request.getMethod()) || !LIMITED_PATHS.contains(request.getRequestURI());
+        if (!"POST".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
+        PathContainer path = PathContainer.parsePath(path(request));
+        return LIMITED_PATHS.stream().noneMatch(pattern -> pattern.matches(path));
+    }
+
+    /**
+     * Chemin décodé et en minuscules : /auth/social/Google ou un caractère encodé (%6c) ne doivent
+     * ni échapper à la limite ni obtenir leur propre compteur.
+     */
+    private static String path(HttpServletRequest request) {
+        String path = request.getServletPath();
+        if (request.getPathInfo() != null) {
+            path += request.getPathInfo();
+        }
+        return path.toLowerCase(Locale.ROOT);
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        String key = KEY_PREFIX + request.getRemoteAddr() + ":" + request.getRequestURI();
+        String key = KEY_PREFIX + request.getRemoteAddr() + ":" + path(request);
         try {
             Long count = redis.opsForValue().increment(key);
             Long ttl = redis.getExpire(key);
