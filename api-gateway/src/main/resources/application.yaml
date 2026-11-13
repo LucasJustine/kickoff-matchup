@@ -15,8 +15,13 @@ app:
     issuer: ${JWT_ISSUER}
     audience: kickoffmatchup-api
   rate-limit:
-    max-requests: 10
-    window-seconds: 60
+    rules:
+      - path: /bff/auth/**
+        capacity: 10
+        period: 1m
+      - path: /mobile/auth/**
+        capacity: 10
+        period: 1m
 
 spring:
 

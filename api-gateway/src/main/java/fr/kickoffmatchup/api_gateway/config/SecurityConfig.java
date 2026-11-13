@@ -81,14 +81,11 @@ public class SecurityConfig {
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
     private final JwtHeaderInjectionFilter jwtHeaderInjectionFilter;
-    private final RateLimitFilter rateLimitFilter;
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
     public SecurityConfig(JwtHeaderInjectionFilter jwtHeaderInjectionFilter,
-            RateLimitFilter rateLimitFilter,
             OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler) {
         this.jwtHeaderInjectionFilter = jwtHeaderInjectionFilter;
-        this.rateLimitFilter = rateLimitFilter;
         this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
     }
 
@@ -105,8 +102,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated())
             .oauth2ResourceServer(oauth2 -> oauth2
                 .bearerTokenResolver(mobileTokenResolver())
-                .jwt(Customizer.withDefaults()))
-            .addFilterBefore(rateLimitFilter, BearerTokenAuthenticationFilter.class);
+                .jwt(Customizer.withDefaults()));
         return http.build();
     }
 
@@ -133,7 +129,6 @@ public class SecurityConfig {
                         .failureHandler(oAuth2LoginSuccessHandler))
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
-                .addFilterBefore(rateLimitFilter, CsrfFilter.class)
                 .addFilterBefore(jwtHeaderInjectionFilter, BearerTokenAuthenticationFilter.class)
                 .addFilterBefore(new ReturnUrlCaptureFilter(), OAuth2AuthorizationRequestRedirectFilter.class)
                 .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class);
@@ -191,13 +186,6 @@ public class SecurityConfig {
     FilterRegistrationBean<JwtHeaderInjectionFilter> jwtHeaderInjectionFilterRegistration(
             JwtHeaderInjectionFilter filter) {
         FilterRegistrationBean<JwtHeaderInjectionFilter> registration = new FilterRegistrationBean<>(filter);
-        registration.setEnabled(false);
-        return registration;
-    }
-
-    @Bean
-    FilterRegistrationBean<RateLimitFilter> rateLimitFilterRegistration(RateLimitFilter filter) {
-        FilterRegistrationBean<RateLimitFilter> registration = new FilterRegistrationBean<>(filter);
         registration.setEnabled(false);
         return registration;
     }
