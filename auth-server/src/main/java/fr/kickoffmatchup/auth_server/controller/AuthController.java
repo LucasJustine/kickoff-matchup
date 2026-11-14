@@ -5,9 +5,7 @@ import fr.kickoffmatchup.auth_server.dto.AuthDtos.*;
 import fr.kickoffmatchup.auth_server.enums.AuthProvider;
 import fr.kickoffmatchup.auth_server.enums.LoginMethod;
 import fr.kickoffmatchup.auth_server.exception.ApiException;
-import fr.kickoffmatchup.auth_server.mail.EmailService;
 import fr.kickoffmatchup.auth_server.model.User;
-import fr.kickoffmatchup.auth_server.repository.UserRepository;
 import fr.kickoffmatchup.auth_server.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,69 +23,57 @@ import java.util.Locale;
 public class AuthController {
 
     private final AuthService authService;
+    private final RegistrationService registration;
+    private final PasswordService passwords;
+    private final AccountService accounts;
     private final AuthTokenService tokens;
     private final RefreshTokenService refreshTokens;
-    private final MfaService mfaService;
-    private final EmailService emailService;
     private final SocialTokenVerifier socialVerifier;
     private final OAuthUserService oauthUsers;
-    private final UserRepository users;
 
     @PostMapping("/register")
     public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequest body) {
-        authService.register(body);
+        registration.register(body);
         return ResponseEntity.accepted().build();
     }
 
     @PostMapping("/verify-email")
     public ResponseEntity<Void> verifyEmail(@Valid @RequestBody TokenRequest body) {
-        authService.verifyEmail(body.token());
+        registration.verifyEmail(body.token());
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/resend-verification")
     public ResponseEntity<Void> resendVerification(@Valid @RequestBody EmailRequest body) {
-        authService.resendVerification(body.email());
+        registration.resendVerification(body.email());
         return ResponseEntity.accepted().build();
     }
 
     @PostMapping("/forgot-password")
     public ResponseEntity<Void> forgotPassword(@Valid @RequestBody EmailRequest body) {
-        authService.forgotPassword(body.email());
+        passwords.forgotPassword(body.email());
         return ResponseEntity.accepted().build();
     }
 
     @PostMapping("/reset-password")
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest body) {
-        authService.resetPassword(body.token(), body.newPassword());
+        passwords.resetPassword(body.token(), body.newPassword());
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest body) {
-        User user = authService.authenticate(body.email(), body.password());
-        if (user.isMfaEnabled()) {
-            MfaService.Challenge challenge = mfaService.start(user.getId());
-            emailService.sendMfaCode(user.getEmail(), challenge.code());
-            return LoginResponse.mfaRequired(challenge.id());
-        }
-        return LoginResponse.ok(tokens.issueFor(user, LoginMethod.PASSWORD));
+        return authService.login(body.email(), body.password());
     }
 
     @PostMapping("/mfa/verify")
     public AuthResult verifyMfa(@Valid @RequestBody MfaVerifyRequest body) {
-        Long userId = mfaService.verify(body.challengeId(), body.code());
-        User user = users.findById(userId)
-                .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "MFA_CHALLENGE_EXPIRED"));
-        return tokens.issueFor(user, LoginMethod.PASSWORD);
+        return authService.verifyMfa(body.challengeId(), body.code());
     }
 
     @PostMapping("/mfa/resend")
     public ResponseEntity<Void> resendMfa(@Valid @RequestBody MfaResendRequest body) {
-        MfaService.Resend resend = mfaService.resend(body.challengeId());
-        User user = users.findById(resend.userId())
-                .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "MFA_CHALLENGE_EXPIRED"));
-        emailService.sendMfaCode(user.getEmail(), resend.code());
+        authService.resendMfa(body.challengeId());
         return ResponseEntity.accepted().build();
     }
 
@@ -116,52 +102,52 @@ public class AuthController {
 
     @PutMapping("/me")
     public UserDto updateProfile(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody UpdateProfileRequest body) {
-        return UserDto.from(authService.updateProfile(current(jwt), body.firstName(), body.lastName()), loginMethod(jwt));
+        return UserDto.from(accounts.updateProfile(current(jwt), body.firstName(), body.lastName()), loginMethod(jwt));
     }
 
     @PostMapping("/me/password")
     public ResponseEntity<Void> changePassword(@AuthenticationPrincipal Jwt jwt,
                                                @Valid @RequestBody ChangePasswordRequest body) {
-        authService.changePassword(current(jwt), body.currentPassword(), body.newPassword());
+        passwords.changePassword(current(jwt), body.currentPassword(), body.newPassword());
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/me/password-link")
     public ResponseEntity<Void> requestPasswordLink(@AuthenticationPrincipal Jwt jwt) {
-        authService.requestPasswordLink(current(jwt));
+        passwords.requestPasswordLink(current(jwt));
         return ResponseEntity.accepted().build();
     }
 
     @PostMapping("/me/email")
     public ResponseEntity<Void> changeEmail(@AuthenticationPrincipal Jwt jwt,
                                             @Valid @RequestBody ChangeEmailRequest body) {
-        authService.requestEmailChange(current(jwt), body.newEmail(), body.currentPassword());
+        accounts.requestEmailChange(current(jwt), body.newEmail(), body.currentPassword());
         return ResponseEntity.accepted().build();
     }
 
     @PostMapping("/confirm-email-change")
     public ResponseEntity<Void> confirmEmailChange(@Valid @RequestBody TokenRequest body) {
-        authService.confirmEmailChange(body.token());
+        accounts.confirmEmailChange(body.token());
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/me/delete")
     public ResponseEntity<Void> deleteAccount(@AuthenticationPrincipal Jwt jwt,
                                               @Valid @RequestBody DeleteAccountRequest body) {
-        boolean deleted = authService.deleteAccount(current(jwt), body.currentPassword());
+        boolean deleted = accounts.deleteAccount(current(jwt), body.currentPassword());
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.accepted().build();
     }
 
     @PostMapping("/confirm-account-deletion")
     public ResponseEntity<Void> confirmAccountDeletion(@Valid @RequestBody TokenRequest body) {
-        authService.confirmAccountDeletion(body.token());
+        accounts.confirmAccountDeletion(body.token());
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/me/mfa")
     public UserDto setMfa(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody MfaToggleRequest body) {
         LoginMethod loginMethod = loginMethod(jwt);
-        return UserDto.from(authService.setMfa(current(jwt), body.enabled(), body.currentPassword(), loginMethod), loginMethod);
+        return UserDto.from(accounts.setMfa(current(jwt), body.enabled(), body.currentPassword(), loginMethod), loginMethod);
     }
 
     private static LoginMethod loginMethod(Jwt jwt) {
@@ -169,8 +155,7 @@ public class AuthController {
     }
 
     private User current(Jwt jwt) {
-        return users.findById(Long.valueOf(jwt.getSubject()))
-                .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED"));
+        return accounts.findById(Long.valueOf(jwt.getSubject()));
     }
 
     private static AuthProvider parseProvider(String value) {
