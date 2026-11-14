@@ -31,7 +31,8 @@ public class OpenApiConfig {
                 "/auth/me/password-link",
                 "/auth/me/email",
                 "/auth/confirm-email-change",
-                "/auth/me/delete")
+                "/auth/me/delete",
+                "/auth/confirm-account-deletion")
             .build();
     }
 }

@@ -30,6 +30,7 @@ public class AuthService {
     private static final Duration VERIFY_TTL = Duration.ofHours(24);
     private static final Duration RESET_TTL = Duration.ofHours(1);
     private static final Duration EMAIL_CHANGE_TTL = Duration.ofHours(24);
+    private static final Duration DELETION_TTL = Duration.ofHours(1);
 
     private final UserRepository users;
     private final PasswordEncoder encoder;
@@ -193,9 +194,25 @@ public class AuthService {
         }
     }
 
+    /** @return true si le compte est supprimé, false si un email de confirmation a été envoyé (compte sans mot de passe). */
     @Transactional
-    public void deleteAccount(User user, String currentPassword) {
+    public boolean deleteAccount(User user, String currentPassword) {
+        if (user.getPassword() == null) {
+            emails.sendAccountDeletion(user.getEmail(), user.getFirstName(),
+                    tokens.create(user, TokenType.ACCOUNT_DELETION, DELETION_TTL));
+            return false;
+        }
         requireCurrentPassword(user, currentPassword);
+        erase(user);
+        return true;
+    }
+
+    @Transactional
+    public void confirmAccountDeletion(String token) {
+        erase(tokens.consume(token, TokenType.ACCOUNT_DELETION));
+    }
+
+    private void erase(User user) {
         refreshTokens.deleteAll(user);
         tokens.deleteAll(user);
         identities.deleteAllForUser(user);

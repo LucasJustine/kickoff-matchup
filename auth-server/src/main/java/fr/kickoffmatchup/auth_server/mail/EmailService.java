@@ -55,6 +55,10 @@ public class EmailService {
         publish(new MailMessage.SetPassword(to, locale(), firstName, token));
     }
 
+    public void sendAccountDeletion(String to, String firstName, String token) {
+        publish(new MailMessage.AccountDeletion(to, locale(), firstName, token));
+    }
+
     private void publish(MailMessage message) {
         if (!withinLimit(message.to())) {
             log.warn("Plafond d'emails atteint pour une adresse : {} non envoyé",
