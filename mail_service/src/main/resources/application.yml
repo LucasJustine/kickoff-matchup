@@ -28,7 +28,6 @@ spring:
           multiplier: 2.0
           max-interval: 10s
 
-  # SMTP authentifié et chiffré par défaut. Le profil dev utilise un serveur local sans TLS (port 1025).
   mail:
     host: ${MAIL_HOST}
     port: ${MAIL_PORT:587}

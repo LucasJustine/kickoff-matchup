@@ -25,7 +25,6 @@ public class MailRenderer {
                         @Value("${app.frontend-url}") String frontendUrl) {
         this.templates = templates;
         this.messages = messages;
-        // Sans / final : les chemins des liens commencent déjà par /.
         this.frontendUrl = frontendUrl.endsWith("/")
                 ? frontendUrl.substring(0, frontendUrl.length() - 1)
                 : frontendUrl;
