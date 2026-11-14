@@ -19,7 +19,6 @@ spring:
         enabled: ${REDIS_SSL:false}
 
   datasource:
-    # Connexion chiffrée par défaut. Le profil dev remplace cette URL par une version sans TLS.
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/${DB_NAME:user_db}?${DB_URL_PARAMS:sslMode=VERIFY_IDENTITY}
     username: ${DB_USER:user-service-user}
     password: ${DB_PASSWORD}
@@ -55,11 +54,9 @@ app:
     ttl-seconds: 600
     refresh-ttl-days: 30
     refresh-reuse-leeway-seconds: 10
-    # Obligatoires hors profil dev : sans elles, le service refuse de démarrer.
     private-key-location: ${JWT_PRIVATE_KEY_LOCATION:}
     public-key-location: ${JWT_PUBLIC_KEY_LOCATION:}
 
-# Documentation de l'API désactivée par défaut, activée par le profil dev.
 springdoc:
   default-produces-media-type: application/json
   api-docs:

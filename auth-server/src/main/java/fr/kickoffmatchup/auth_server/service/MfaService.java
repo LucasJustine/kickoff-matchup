@@ -94,7 +94,6 @@ public class MfaService {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "MFA_INVALID_CODE");
         }
 
-        // deux requêtes simultanées avec le bon code ne passent pas toutes les deux.
         if (userId == null || !Boolean.TRUE.equals(redis.delete(key))) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "MFA_CHALLENGE_EXPIRED");
         }

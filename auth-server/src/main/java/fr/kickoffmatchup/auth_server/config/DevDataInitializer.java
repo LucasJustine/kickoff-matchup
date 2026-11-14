@@ -10,10 +10,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-/**
- * Compte de développement, créé uniquement avec le profil dev et seulement s'il n'existe pas.
- * Le mot de passe vient de DEV_ADMIN_PASSWORD : sans cette variable, aucun compte n'est créé.
- */
 @Configuration
 @Profile("dev")
 @Slf4j

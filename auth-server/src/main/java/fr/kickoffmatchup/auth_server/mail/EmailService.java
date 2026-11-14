@@ -18,7 +18,6 @@ import java.time.Duration;
 @Slf4j
 public class EmailService {
 
-    /** Plafond d'emails par adresse et par heure, tous types confondus : au-delà, l'email n'est pas envoyé. */
     private static final int MAX_PER_HOUR = 10;
     private static final Duration WINDOW = Duration.ofHours(1);
     private static final String RATE_PREFIX = "mail:rate:";
@@ -65,7 +64,6 @@ public class EmailService {
         events.publishEvent(new MailRequested(message));
     }
 
-    /** Si Redis est indisponible, l'email part quand même : la limite ne doit pas bloquer une inscription. */
     private boolean withinLimit(String to) {
         String key = RATE_PREFIX + Hashing.sha256Hex(to);
         try {
