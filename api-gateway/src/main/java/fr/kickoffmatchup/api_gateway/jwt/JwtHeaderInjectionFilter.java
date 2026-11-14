@@ -1,8 +1,10 @@
 package fr.kickoffmatchup.api_gateway.jwt;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.nimbusds.jwt.SignedJWT;
 
+import fr.kickoffmatchup.api_gateway.dto.AuthServerDtos.AuthResult;
+import fr.kickoffmatchup.api_gateway.dto.AuthServerDtos.RefreshRequest;
+import fr.kickoffmatchup.api_gateway.dto.AuthServerDtos.TokenPair;
 import fr.kickoffmatchup.api_gateway.security.SecurityConstants;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -32,14 +34,6 @@ import java.util.concurrent.locks.ReentrantLock;
 public class JwtHeaderInjectionFilter extends OncePerRequestFilter {
 
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    private record GatewayTokenPair(String accessToken, String refreshToken) {}
-
-    private record RefreshRequest(String refreshToken) {}
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    private record GatewayAuthResult(GatewayTokenPair tokens) {}
-    
     private static final Logger log = LoggerFactory.getLogger(JwtHeaderInjectionFilter.class);
 
     private static final Duration REFRESH_MARGIN = Duration.ofSeconds(30);
@@ -135,7 +129,7 @@ public class JwtHeaderInjectionFilter extends OncePerRequestFilter {
             }
 
             try {
-                GatewayTokenPair pair = callRefreshEndpoint(refreshToken);
+                TokenPair pair = callRefreshEndpoint(refreshToken);
                 if (pair == null || pair.accessToken() == null) {
                     return null;
                 }
@@ -159,13 +153,13 @@ public class JwtHeaderInjectionFilter extends OncePerRequestFilter {
         }
     }
 
-    private GatewayTokenPair callRefreshEndpoint(String refreshToken) {
-        GatewayAuthResult body = authServerClient.post()
+    private TokenPair callRefreshEndpoint(String refreshToken) {
+        AuthResult body = authServerClient.post()
                 .uri("/auth/refresh")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new RefreshRequest(refreshToken))
                 .retrieve()
-                .body(GatewayAuthResult.class);
+                .body(AuthResult.class);
         return body == null ? null : body.tokens();
     }
 

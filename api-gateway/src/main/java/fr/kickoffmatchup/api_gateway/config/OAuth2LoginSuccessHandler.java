@@ -1,6 +1,7 @@
 package fr.kickoffmatchup.api_gateway.config;
 
-import fr.kickoffmatchup.api_gateway.config.ReturnUrl;
+import fr.kickoffmatchup.api_gateway.dto.AuthServerDtos.AuthResult;
+import fr.kickoffmatchup.api_gateway.dto.AuthServerDtos.ErrorBody;
 import fr.kickoffmatchup.api_gateway.utils.Session;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -63,12 +64,12 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler, 
 
         try {
             // Même contrat que POST /auth/social/{provider} { idToken } de l'auth service.
-            AuthResultDto result = authServerClient.post()
+            AuthResult result = authServerClient.post()
                     .uri("/auth/social/{provider}", provider)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(Map.of("idToken", oidcUser.getIdToken().getTokenValue()))
                     .retrieve()
-                    .body(AuthResultDto.class);
+                    .body(AuthResult.class);
 
             if (result == null || result.tokens() == null || result.tokens().accessToken() == null) {
                 throw new RestClientException("Réponse de l'auth service sans tokens");
@@ -129,14 +130,5 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler, 
 
     private static String encode(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
-    }
-
-    private record TokenPairDto(String accessToken, String refreshToken) {
-    }
-
-    private record AuthResultDto(Object user, TokenPairDto tokens) {
-    }
-
-    private record ErrorBody(String code) {
     }
 }

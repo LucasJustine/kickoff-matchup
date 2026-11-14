@@ -1,5 +1,8 @@
 package fr.kickoffmatchup.api_gateway.controller;
 
+import fr.kickoffmatchup.api_gateway.dto.AuthServerDtos.AuthResult;
+import fr.kickoffmatchup.api_gateway.dto.AuthServerDtos.LoginResponse;
+import fr.kickoffmatchup.api_gateway.dto.AuthServerDtos.RefreshRequest;
 import fr.kickoffmatchup.api_gateway.security.SecurityConstants;
 import fr.kickoffmatchup.api_gateway.utils.Session;
 import jakarta.servlet.http.HttpServletRequest;
@@ -124,19 +127,4 @@ public class BffAuthController {
                                    @NotBlank @Pattern(regexp = "\\d{6}") String code) {
     }
 
-    private record RefreshRequest(String refreshToken) {
-    }
-
-    private record UserDto(Long id, String email, String firstName, String lastName, boolean mfaEnabled,
-                           boolean hasPassword, String loginMethod) {
-    }
-
-    private record TokenPair(String accessToken, String refreshToken, String tokenType, long expiresIn) {
-    }
-
-    private record AuthResult(UserDto user, TokenPair tokens) {
-    }
-
-    private record LoginResponse(String status, UserDto user, TokenPair tokens, String challengeId) {
-    }
 }
