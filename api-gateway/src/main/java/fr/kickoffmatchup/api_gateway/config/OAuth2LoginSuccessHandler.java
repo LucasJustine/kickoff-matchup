@@ -43,10 +43,9 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler, 
     private final String frontendUrl;
 
     public OAuth2LoginSuccessHandler(
-            RestClient.Builder restClientBuilder,
-            @Value("${app.auth-server-url}") String authServerUrl,
+            RestClient authServerClient,
             @Value("${app.frontend-url}") String frontendUrl) {
-        this.authServerClient = restClientBuilder.baseUrl(authServerUrl).build();
+        this.authServerClient = authServerClient;
         this.frontendUrl = frontendUrl;
     }
 
@@ -81,9 +80,10 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler, 
             response.sendRedirect(frontendUrl + (returnUrl != null ? returnUrl : DEFAULT_RETURN_URL));
 
         } catch (RestClientResponseException e) {
-            log.warn("Connexion sociale ({}) : l'auth service a répondu HTTP {} corps='{}'",
-                    provider, e.getStatusCode().value(), e.getResponseBodyAsString());
-            redirectToLogin(request, response, codeOf(e));
+            String code = codeOf(e);
+            log.warn("Connexion sociale ({}) : l'auth service a répondu HTTP {} code={}",
+                    provider, e.getStatusCode().value(), code);
+            redirectToLogin(request, response, code);
         } catch (RestClientException e) {
             log.warn("Connexion sociale ({}) impossible : {}", provider, e.getMessage());
             redirectToLogin(request, response, FAILED);
