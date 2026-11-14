@@ -1,5 +1,6 @@
 package fr.kickoffmatchup.api_gateway.controller;
 
+import fr.kickoffmatchup.api_gateway.dto.AuthServerDtos.ErrorBody;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,11 +31,13 @@ public class AuthServerErrorHandler {
                     "code", "INVALID_CREDENTIALS",
                     "message", "Email ou mot de passe incorrect."));
         }
-        String body = e.getResponseBodyAsString();
-        if (body.stripLeading().startsWith("{")) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(body);
+        ErrorBody body = parse(e);
+        if (body != null && body.code() != null) {
+            Map<String, Object> response = error(body.code(), body.message() != null ? body.message() : body.code());
+            if (body.fields() != null) {
+                response.put("fields", body.fields());
+            }
+            return json(e.getStatusCode(), response);
         }
         return json(e.getStatusCode(), error("AUTH_SERVER_ERROR", "Requête refusée par le service d'authentification."));
     }
@@ -51,6 +54,14 @@ public class AuthServerErrorHandler {
         log.warn("Auth server injoignable : {}", e.getMessage());
         return json(HttpStatus.SERVICE_UNAVAILABLE,
                 error("AUTH_SERVER_UNAVAILABLE", "Le service d'authentification est indisponible."));
+    }
+
+    private static ErrorBody parse(HttpClientErrorException e) {
+        try {
+            return e.getResponseBodyAs(ErrorBody.class);
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     private static Map<String, Object> error(String code, String message) {
