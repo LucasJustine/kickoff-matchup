@@ -42,13 +42,14 @@ public class SecurityConfig {
             "/error",
             "/favicon.ico",
             "/assets/**",
-            "/v3/api-docs/**",
-            "/swagger-ui/**",
+            "/actuator/health",
             "/public/**"
     };
 
     private static final String[] AUTH_ENTRY_PATHS = {
             "/bff/auth/login",
+            // La déconnexion lit la session directement : elle doit rester possible avec un access token expiré.
+            "/bff/auth/logout",
             "/bff/auth/mfa/verify",
             "/bff/auth/mfa/resend",
             "/oauth2/**",
