@@ -57,6 +57,7 @@ public class SecurityConfig {
             "/bff/auth/verify-email",
             "/bff/auth/resend-verification",
             "/bff/auth/confirm-email-change",
+            "/bff/auth/confirm-account-deletion",
             "/bff/auth/forgot-password",
             "/bff/auth/reset-password"
     };
@@ -72,6 +73,7 @@ public class SecurityConfig {
             "/mobile/auth/verify-email",
             "/mobile/auth/resend-verification",
             "/mobile/auth/confirm-email-change",
+            "/mobile/auth/confirm-account-deletion",
             "/mobile/auth/forgot-password",
             "/mobile/auth/reset-password"
     };
