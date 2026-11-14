@@ -26,7 +26,7 @@ public class MailPublisher {
         } catch (AmqpException e) {
             log.error("Mail {} non publié (RabbitMQ indisponible) : l'utilisateur ne le recevra pas",
                     event.message().getClass().getSimpleName(), e);
-            throw e;
+            // Pas de relance : la transaction est déjà validée, une erreur ferait réessayer une opération déjà faite.
         }
     }
 }
