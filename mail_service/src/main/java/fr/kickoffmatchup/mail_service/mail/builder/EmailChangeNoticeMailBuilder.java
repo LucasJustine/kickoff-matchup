@@ -1,35 +1,23 @@
 package fr.kickoffmatchup.mail_service.mail.builder;
 
-import fr.kickoffmatchup.mail_service.mail.MailBuilder;
-import fr.kickoffmatchup.mail_service.mail.MailContent;
 import fr.kickoffmatchup.mail_contract.MailMessage.EmailChangeNotice;
+import fr.kickoffmatchup.mail_service.mail.AbstractMailBuilder;
 import fr.kickoffmatchup.mail_service.mail.MailRenderer;
 import org.springframework.stereotype.Component;
 
-import java.util.Locale;
 import java.util.Map;
 
 @Component
-public class EmailChangeNoticeMailBuilder implements MailBuilder<EmailChangeNotice> {
-
-    private final MailRenderer renderer;
+public class EmailChangeNoticeMailBuilder extends AbstractMailBuilder<EmailChangeNotice> {
 
     public EmailChangeNoticeMailBuilder(MailRenderer renderer) {
-        this.renderer = renderer;
+        super(renderer, EmailChangeNotice.class, "email-change-notice");
     }
 
     @Override
-    public Class<EmailChangeNotice> messageType() {
-        return EmailChangeNotice.class;
-    }
-
-    @Override
-    public MailContent build(EmailChangeNotice message, Locale locale) {
-        String subject = renderer.message("email-change-notice.subject", locale);
-        String body = renderer.render("mail/email-change-notice", locale, Map.of(
-                "subject", subject,
+    protected Map<String, Object> variables(EmailChangeNotice message) {
+        return Map.of(
                 "firstName", renderer.name(message.firstName()),
-                "newEmail", message.newEmail() == null ? "" : message.newEmail()));
-        return MailContent.html(subject, body);
+                "newEmail", message.newEmail() == null ? "" : message.newEmail());
     }
 }

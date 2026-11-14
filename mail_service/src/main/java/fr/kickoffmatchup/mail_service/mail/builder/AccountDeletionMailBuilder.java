@@ -1,35 +1,23 @@
 package fr.kickoffmatchup.mail_service.mail.builder;
 
-import fr.kickoffmatchup.mail_service.mail.MailBuilder;
-import fr.kickoffmatchup.mail_service.mail.MailContent;
 import fr.kickoffmatchup.mail_contract.MailMessage.AccountDeletion;
+import fr.kickoffmatchup.mail_service.mail.AbstractMailBuilder;
 import fr.kickoffmatchup.mail_service.mail.MailRenderer;
 import org.springframework.stereotype.Component;
 
-import java.util.Locale;
 import java.util.Map;
 
 @Component
-public class AccountDeletionMailBuilder implements MailBuilder<AccountDeletion> {
-
-    private final MailRenderer renderer;
+public class AccountDeletionMailBuilder extends AbstractMailBuilder<AccountDeletion> {
 
     public AccountDeletionMailBuilder(MailRenderer renderer) {
-        this.renderer = renderer;
+        super(renderer, AccountDeletion.class, "account-deletion");
     }
 
     @Override
-    public Class<AccountDeletion> messageType() {
-        return AccountDeletion.class;
-    }
-
-    @Override
-    public MailContent build(AccountDeletion message, Locale locale) {
-        String subject = renderer.message("account-deletion.subject", locale);
-        String body = renderer.render("mail/account-deletion", locale, Map.of(
-                "subject", subject,
+    protected Map<String, Object> variables(AccountDeletion message) {
+        return Map.of(
                 "firstName", renderer.name(message.firstName()),
-                "link", renderer.link("/confirm-account-deletion", message.token())));
-        return MailContent.html(subject, body);
+                "link", renderer.link("/confirm-account-deletion", message.token()));
     }
 }
