@@ -52,6 +52,7 @@ app:
   mail:
     from: ${MAIL_FROM:no-reply@kickoffmatchup.fr}
     default-locale: ${MAIL_DEFAULT_LOCALE:fr}
+    dlq-ttl: ${MAIL_DLQ_TTL:7d}
 
 ---
 spring:

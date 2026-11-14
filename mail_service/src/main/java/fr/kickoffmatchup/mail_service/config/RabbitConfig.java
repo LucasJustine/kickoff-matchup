@@ -7,8 +7,11 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.time.Duration;
 
 @Configuration
 public class RabbitConfig {
@@ -31,8 +34,8 @@ public class RabbitConfig {
     }
 
     @Bean
-    Queue mailAuthDlq() {
-        return QueueBuilder.durable(AUTH_DLQ).build();
+    Queue mailAuthDlq(@Value("${app.mail.dlq-ttl:7d}") Duration dlqTtl) {
+        return QueueBuilder.durable(AUTH_DLQ).ttl((int) dlqTtl.toMillis()).build();
     }
 
     @Bean
