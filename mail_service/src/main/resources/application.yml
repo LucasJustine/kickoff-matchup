@@ -14,11 +14,13 @@ spring:
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USERNAME:guest}
-    password: ${RABBITMQ_PASSWORD} 
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    ssl:
+      enabled: ${RABBITMQ_SSL:true}
     listener:
       simple:
-        default-requeue-rejected: false  
+        default-requeue-rejected: false
         retry:
           enabled: true
           max-attempts: 3
@@ -27,24 +29,54 @@ spring:
           max-interval: 10s
 
   mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:true}
+          connectiontimeout: 5000
+          timeout: 10000
+          writetimeout: 10000
+          starttls:
+            enable: ${MAIL_STARTTLS:true}
+            required: ${MAIL_STARTTLS:true}
+
+
+app:
+  frontend-url: ${FRONTEND_URL}
+
+  mail:
+    from: ${MAIL_FROM:no-reply@kickoffmatchup.fr}
+    default-locale: ${MAIL_DEFAULT_LOCALE:fr}
+    dlq-ttl: ${MAIL_DLQ_TTL:7d}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  rabbitmq:
+    username: ${RABBITMQ_USERNAME:guest}
+    ssl:
+      enabled: ${RABBITMQ_SSL:false}
+
+  mail:
     host: ${MAIL_HOST:localhost}
     port: ${MAIL_PORT:1025}
     username: ${MAIL_USERNAME:}
     password: ${MAIL_PASSWORD:}
-    default-encoding: UTF-8
     properties:
       mail:
         smtp:
           auth: ${MAIL_SMTP_AUTH:false}
           starttls:
             enable: ${MAIL_STARTTLS:false}
-
+            required: ${MAIL_STARTTLS:false}
 
 app:
   frontend-url: ${FRONTEND_URL:http://localhost}
-  
-  mail:
-    from: ${MAIL_FROM:no-reply@kickoffmatchup.fr}
-    default-locale: ${MAIL_DEFAULT_LOCALE:fr}
-    
-    
