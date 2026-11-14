@@ -82,9 +82,12 @@ public class SecurityConfig {
 
     private final JwtHeaderInjectionFilter jwtHeaderInjectionFilter;
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+    private final UserRateLimitFilter userRateLimitFilter;
 
     public SecurityConfig(JwtHeaderInjectionFilter jwtHeaderInjectionFilter,
-            OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler) {
+            OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
+            TokenBucketLimiter tokenBucketLimiter) {
+        this.userRateLimitFilter = new UserRateLimitFilter(tokenBucketLimiter);
         this.jwtHeaderInjectionFilter = jwtHeaderInjectionFilter;
         this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
     }
@@ -102,7 +105,8 @@ public class SecurityConfig {
                 .anyRequest().authenticated())
             .oauth2ResourceServer(oauth2 -> oauth2
                 .bearerTokenResolver(mobileTokenResolver())
-                .jwt(Customizer.withDefaults()));
+                .jwt(Customizer.withDefaults()))
+            .addFilterAfter(userRateLimitFilter, BearerTokenAuthenticationFilter.class);
         return http.build();
     }
 
@@ -130,6 +134,7 @@ public class SecurityConfig {
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .addFilterBefore(jwtHeaderInjectionFilter, BearerTokenAuthenticationFilter.class)
+                .addFilterAfter(userRateLimitFilter, BearerTokenAuthenticationFilter.class)
                 .addFilterBefore(new ReturnUrlCaptureFilter(), OAuth2AuthorizationRequestRedirectFilter.class)
                 .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class);
 
