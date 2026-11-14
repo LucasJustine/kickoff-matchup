@@ -1,4 +1,4 @@
-package fr.kickoffmatchup.mail_service.mail;
+package fr.kickoffmatchup.mail_contract;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;

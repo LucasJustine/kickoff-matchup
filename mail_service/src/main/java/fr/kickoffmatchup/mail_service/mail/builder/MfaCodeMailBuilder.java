@@ -2,7 +2,7 @@ package fr.kickoffmatchup.mail_service.mail.builder;
 
 import fr.kickoffmatchup.mail_service.mail.MailBuilder;
 import fr.kickoffmatchup.mail_service.mail.MailContent;
-import fr.kickoffmatchup.mail_service.mail.MailMessage.MfaCode;
+import fr.kickoffmatchup.mail_contract.MailMessage.MfaCode;
 import fr.kickoffmatchup.mail_service.mail.MailRenderer;
 import org.springframework.stereotype.Component;
 

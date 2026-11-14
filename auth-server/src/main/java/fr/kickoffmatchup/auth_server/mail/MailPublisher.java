@@ -1,5 +1,6 @@
 package fr.kickoffmatchup.auth_server.mail;
 
+import fr.kickoffmatchup.mail_contract.MailQueues;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.AmqpException;
@@ -22,7 +23,7 @@ public class MailPublisher {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void on(MailRequested event) {
         try {
-            rabbit.convertAndSend(RabbitConfig.EXCHANGE, RabbitConfig.ROUTING_KEY, event.message());
+            rabbit.convertAndSend(MailQueues.EXCHANGE, MailQueues.AUTH_ROUTING_KEY, event.message());
         } catch (AmqpException e) {
             log.error("Mail {} non publié (RabbitMQ indisponible) : l'utilisateur ne le recevra pas",
                     event.message().getClass().getSimpleName(), e);

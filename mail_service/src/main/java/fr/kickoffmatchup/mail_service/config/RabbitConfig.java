@@ -1,5 +1,6 @@
 package fr.kickoffmatchup.mail_service.config;
 
+import fr.kickoffmatchup.mail_contract.MailQueues;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
@@ -16,31 +17,25 @@ import java.time.Duration;
 @Configuration
 public class RabbitConfig {
 
-    public static final String EXCHANGE = "mail.exchange";
-
-    public static final String AUTH_ROUTING_KEY = "mail.auth";
-    public static final String AUTH_QUEUE = "mail.auth.queue";
-    public static final String AUTH_DLQ = "mail.auth.queue.dlq";
-    
     @Bean
     DirectExchange mailExchange() {
-        return new DirectExchange(EXCHANGE, true, false);
+        return new DirectExchange(MailQueues.EXCHANGE, true, false);
     }
 
     // ---------- Mails d'auth ----------
     @Bean
     Queue mailAuthQueue() {
-        return queueWithDlq(AUTH_QUEUE, AUTH_DLQ);
+        return queueWithDlq(MailQueues.AUTH_QUEUE, MailQueues.AUTH_DLQ);
     }
 
     @Bean
     Queue mailAuthDlq(@Value("${app.mail.dlq-ttl:7d}") Duration dlqTtl) {
-        return QueueBuilder.durable(AUTH_DLQ).ttl((int) dlqTtl.toMillis()).build();
+        return QueueBuilder.durable(MailQueues.AUTH_DLQ).ttl((int) dlqTtl.toMillis()).build();
     }
 
     @Bean
     Binding mailAuthBinding() {
-        return BindingBuilder.bind(mailAuthQueue()).to(mailExchange()).with(AUTH_ROUTING_KEY);
+        return BindingBuilder.bind(mailAuthQueue()).to(mailExchange()).with(MailQueues.AUTH_ROUTING_KEY);
     }
 
    

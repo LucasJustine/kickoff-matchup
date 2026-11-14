@@ -1,5 +1,6 @@
 package fr.kickoffmatchup.auth_server.mail;
 
+import fr.kickoffmatchup.mail_contract.MailMessage;
 import fr.kickoffmatchup.auth_server.util.Hashing;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
