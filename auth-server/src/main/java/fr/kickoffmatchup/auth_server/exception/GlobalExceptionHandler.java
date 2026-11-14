@@ -1,6 +1,7 @@
 package fr.kickoffmatchup.auth_server.exception;
 
 import org.springframework.amqp.AmqpException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -40,6 +41,15 @@ public class GlobalExceptionHandler {
         body.put("fields", fields);
 
         return ResponseEntity.badRequest().body(body);
+    }
+
+  
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleConflict(DataIntegrityViolationException e) {
+        log.warn("Conflit d'intégrité : {}", e.getMostSpecificCause().getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("success", false, "code", "CONFLICT",
+                            "message", "La ressource existe déjà, réessayez."));
     }
 
     @ExceptionHandler(AmqpException.class)
