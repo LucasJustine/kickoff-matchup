@@ -1,36 +1,41 @@
 server:
   port: ${SERVER_PORT:9000}
+  shutdown: graceful
 
 spring:
   application:
     name: auth-server
   config:
     import: optional:file:.env[.properties]
-
-  session:
-    store-type: redis
-    redis:
-      namespace: "kickoffmatchup:session"
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
 
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      ssl:
+        enabled: ${REDIS_SSL:false}
 
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/${DB_NAME:user_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/${DB_NAME:user_db}?${DB_URL_PARAMS:sslMode=VERIFY_IDENTITY}
     username: ${DB_USER:user-service-user}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
+    open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
 
+  flyway:
+    baseline-on-migrate: true
+    baseline-version: 1
 
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
@@ -45,7 +50,7 @@ app:
   social:
     google:
       client-ids: ${GOOGLE_CLIENT_IDS} # Client IDs autorisés comme audience des ID tokens Google
-      
+
   jwt:
     issuer: ${JWT_ISSUER:https://auth.kickoffmatchup.fr}
     audience: kickoffmatchup-api
@@ -57,8 +62,17 @@ app:
 
 springdoc:
   default-produces-media-type: application/json
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
 
-  
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
 logging:
   level:
     root: INFO
@@ -68,8 +82,16 @@ spring:
   config:
     activate:
       on-profile: dev
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/${DB_NAME:user_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
   jpa:
     show-sql: true
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
 
 logging:
   level:

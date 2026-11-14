@@ -148,7 +148,13 @@ public class AuthController {
     @PostMapping("/me/delete")
     public ResponseEntity<Void> deleteAccount(@AuthenticationPrincipal Jwt jwt,
                                               @Valid @RequestBody DeleteAccountRequest body) {
-        authService.deleteAccount(current(jwt), body.currentPassword());
+        boolean deleted = authService.deleteAccount(current(jwt), body.currentPassword());
+        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.accepted().build();
+    }
+
+    @PostMapping("/confirm-account-deletion")
+    public ResponseEntity<Void> confirmAccountDeletion(@Valid @RequestBody TokenRequest body) {
+        authService.confirmAccountDeletion(body.token());
         return ResponseEntity.noContent().build();
     }
 

@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.security.converter.RsaKeyConverters;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
@@ -35,11 +37,16 @@ public class JwtConfig {
 
     @Bean
     RSAKey rsaKey(@Value("${app.jwt.private-key-location:}") String privateLocation,
-                  @Value("${app.jwt.public-key-location:}") String publicLocation) throws Exception {
+                  @Value("${app.jwt.public-key-location:}") String publicLocation,
+                  Environment environment) throws Exception {
         RSAPrivateKey privateKey;
         RSAPublicKey publicKey;
 
         if (privateLocation.isBlank() || publicLocation.isBlank()) {
+            if (!environment.acceptsProfiles(Profiles.of("dev"))) {
+                throw new IllegalStateException(
+                        "Clés JWT absentes : définir JWT_PRIVATE_KEY_LOCATION et JWT_PUBLIC_KEY_LOCATION");
+            }
             log.warn("Aucune clé JWT configurée : clé RSA ÉPHÉMÈRE générée (dev uniquement, perdue au redémarrage)");
             KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
             generator.initialize(2048);

@@ -12,7 +12,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         @JsonSubTypes.Type(value = MailMessage.AccountAlreadyExists.class, name = "ACCOUNT_ALREADY_EXISTS"),
         @JsonSubTypes.Type(value = MailMessage.EmailChange.class, name = "EMAIL_CHANGE"),
         @JsonSubTypes.Type(value = MailMessage.EmailChangeNotice.class, name = "EMAIL_CHANGE_NOTICE"),
-        @JsonSubTypes.Type(value = MailMessage.SetPassword.class, name = "SET_PASSWORD")
+        @JsonSubTypes.Type(value = MailMessage.SetPassword.class, name = "SET_PASSWORD"),
+        @JsonSubTypes.Type(value = MailMessage.AccountDeletion.class, name = "ACCOUNT_DELETION")
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public sealed interface MailMessage {
@@ -34,4 +35,6 @@ public sealed interface MailMessage {
     record EmailChangeNotice(String to, String locale, String firstName, String newEmail) implements MailMessage {}
 
     record SetPassword(String to, String locale, String firstName, String token) implements MailMessage {}
+
+    record AccountDeletion(String to, String locale, String firstName, String token) implements MailMessage {}
 }
