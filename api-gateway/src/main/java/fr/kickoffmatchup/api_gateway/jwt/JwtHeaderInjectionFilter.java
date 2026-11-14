@@ -11,10 +11,7 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.session.data.redis.RedisSessionRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
@@ -49,18 +46,13 @@ public class JwtHeaderInjectionFilter extends OncePerRequestFilter {
 
     private static final int LOCK_STRIPES = 64;
 
-    private final RedisSessionRepository sessionRepository;
     private final RestClient authServerClient;
 
- 
+
     private final ReentrantLock[] locks = new ReentrantLock[LOCK_STRIPES];
 
-    public JwtHeaderInjectionFilter(
-            RedisSessionRepository sessionRepository,
-            RestClient.Builder restClientBuilder,
-            @Value("${app.auth-server-url}") String authServerUrl) {
-        this.sessionRepository = sessionRepository;
-        this.authServerClient = restClientBuilder.baseUrl(authServerUrl).build();
+    public JwtHeaderInjectionFilter(RestClient authServerClient) {
+        this.authServerClient = authServerClient;
         for (int i = 0; i < LOCK_STRIPES; i++) {
             locks[i] = new ReentrantLock();
         }
@@ -86,11 +78,6 @@ public class JwtHeaderInjectionFilter extends OncePerRequestFilter {
         }
 
         final String resolvedToken = token;
-
-        if (request.getRequestURI().startsWith("/api/") && resolvedToken == null) {
-            response.sendError(HttpStatus.UNAUTHORIZED.value(), "Session non authentifiee");
-            return;
-        }
 
         if (resolvedToken != null) {
             request.setAttribute(SecurityConstants.REQUEST_ACCESS_TOKEN_ATTRIBUTE, resolvedToken);
@@ -159,8 +146,7 @@ public class JwtHeaderInjectionFilter extends OncePerRequestFilter {
                 return pair.accessToken();
 
             } catch (HttpClientErrorException exception) {
-                log.warn("Refresh refusé par l'auth server : HTTP {} {}",
-                        exception.getStatusCode().value(), exception.getResponseBodyAsString());
+                log.warn("Refresh refusé par l'auth server : HTTP {}", exception.getStatusCode().value());
                 servletSession.removeAttribute(SecurityConstants.SESSION_ACCESS_TOKEN);
                 servletSession.removeAttribute(SecurityConstants.SESSION_REFRESH_TOKEN);
                 return null;

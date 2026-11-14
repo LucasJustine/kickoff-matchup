@@ -1,9 +1,14 @@
 package fr.kickoffmatchup.api_gateway.controller;
 
+import fr.kickoffmatchup.api_gateway.security.SecurityConstants;
 import fr.kickoffmatchup.api_gateway.utils.Session;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Value;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,15 +26,13 @@ public class BffAuthController {
     private final RestClient authServerClient;
     private static final Logger log = LoggerFactory.getLogger(BffAuthController.class);
 
-    public BffAuthController(
-            RestClient.Builder restClientBuilder,
-            @Value("${app.auth-server-url}") String authServerUrl) {
-        this.authServerClient = restClientBuilder.baseUrl(authServerUrl).build();
+    public BffAuthController(RestClient authServerClient) {
+        this.authServerClient = authServerClient;
     }
 
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest payload, HttpServletRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest payload, HttpServletRequest request) {
         LoginResponse response = authServerClient.post()
                 .uri("/auth/login")
                 .headers(headers -> forwardLanguage(request, headers))
@@ -38,7 +41,7 @@ public class BffAuthController {
                 .body(LoginResponse.class);
 
         if (response == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
         }
 
         if ("MFA_REQUIRED".equals(response.status())) {
@@ -47,10 +50,11 @@ public class BffAuthController {
                     "challengeId", response.challengeId() != null ? response.challengeId() : ""));
         }
 
-        if (response.tokens() != null) {
-            Session.storeTokensInSession(request, response.tokens().accessToken(),
-                    response.tokens().refreshToken());
+        if (response.tokens() == null || response.tokens().accessToken() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
         }
+        Session.storeTokensInSession(request, response.tokens().accessToken(),
+                response.tokens().refreshToken());
 
         return ResponseEntity.ok(Map.of(
                 "status", "OK",
@@ -58,7 +62,7 @@ public class BffAuthController {
     }
 
     @PostMapping("/mfa/verify")
-    public ResponseEntity<?> verifyMfa(@RequestBody MfaVerifyRequest payload, HttpServletRequest request) {
+    public ResponseEntity<?> verifyMfa(@Valid @RequestBody MfaVerifyRequest payload, HttpServletRequest request) {
         AuthResult result = authServerClient.post()
                 .uri("/auth/mfa/verify")
                 .headers(headers -> forwardLanguage(request, headers))
@@ -66,13 +70,10 @@ public class BffAuthController {
                 .retrieve()
                 .body(AuthResult.class);
 
-        if (result == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (result == null || result.tokens() == null || result.tokens().accessToken() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
         }
-
-        if (result.tokens() != null) {
-            Session.storeTokensInSession(request, result.tokens().accessToken(), result.tokens().refreshToken());
-        }
+        Session.storeTokensInSession(request, result.tokens().accessToken(), result.tokens().refreshToken());
 
         return ResponseEntity.ok(Map.of(
                 "status", "OK",
@@ -85,7 +86,7 @@ public class BffAuthController {
 
         if (session != null) {
             // 1. Récupération du Refresh Token stocké en session lors du login
-            String refreshToken = (String) session.getAttribute("REFRESH_TOKEN");
+            String refreshToken = (String) session.getAttribute(SecurityConstants.SESSION_REFRESH_TOKEN);
 
             // 2. Notification à l'Auth Server pour révoquer le token
             if (refreshToken != null) {
@@ -115,10 +116,12 @@ public class BffAuthController {
         }
     }
 
-    public record LoginRequest(String email, String password) {
+    public record LoginRequest(@NotBlank @Email @Size(max = 254) String email,
+                               @NotBlank @Size(max = 72) String password) {
     }
 
-    public record MfaVerifyRequest(String challengeId, String code) {
+    public record MfaVerifyRequest(@NotBlank @Size(max = 100) String challengeId,
+                                   @NotBlank @Pattern(regexp = "\\d{6}") String code) {
     }
 
     private record RefreshRequest(String refreshToken) {
