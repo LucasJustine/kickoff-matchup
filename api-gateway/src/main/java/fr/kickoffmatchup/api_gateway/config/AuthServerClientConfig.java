@@ -9,10 +9,6 @@ import org.springframework.web.client.RestClient;
 import java.net.http.HttpClient;
 import java.time.Duration;
 
-/**
- * Client HTTP unique vers l'auth server, avec timeouts : un auth server lent ne doit pas
- * bloquer indéfiniment les threads de la gateway.
- */
 @Configuration
 public class AuthServerClientConfig {
 

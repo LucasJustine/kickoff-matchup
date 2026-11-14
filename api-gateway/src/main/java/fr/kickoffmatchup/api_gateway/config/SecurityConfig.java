@@ -48,7 +48,6 @@ public class SecurityConfig {
 
     private static final String[] AUTH_ENTRY_PATHS = {
             "/bff/auth/login",
-            // La déconnexion lit la session directement : elle doit rester possible avec un access token expiré.
             "/bff/auth/logout",
             "/bff/auth/mfa/verify",
             "/bff/auth/mfa/resend",

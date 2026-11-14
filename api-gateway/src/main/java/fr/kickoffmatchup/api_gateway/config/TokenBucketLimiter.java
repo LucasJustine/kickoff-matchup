@@ -130,7 +130,6 @@ public class TokenBucketLimiter {
             result = redis.execute(TOKEN_BUCKET, List.of(key),
                     String.valueOf(limit.capacity()), String.valueOf(limit.periodMillis()));
         } catch (DataAccessException e) {
-            // Refus plutôt que passage libre : sans limite, la connexion et le MFA n'ont plus de protection.
             log.warn("Rate limiting indisponible (Redis), requête refusée : {}", e.getMessage());
             response.sendError(HttpStatus.SERVICE_UNAVAILABLE.value());
             return false;

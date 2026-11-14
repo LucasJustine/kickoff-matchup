@@ -7,13 +7,11 @@ server:
       cookie:
         http-only: true
         same-site: lax
-        # Secure par défaut. Le profil dev le désactive pour un serveur local en HTTP.
         secure: ${COOKIE_SECURE:true}
 
 app:
   frontend-url: ${FRONTEND_URL}
   auth-server-url: ${AUTH_SERVER_URL}
-  # L'auth server doit être joint en https, sauf autorisation explicite (réseau privé, profil dev).
   auth-server-allow-http: ${AUTH_SERVER_ALLOW_HTTP:false}
   auth-server-connect-timeout: 2s
   auth-server-read-timeout: 5s
@@ -21,7 +19,6 @@ app:
     issuer: ${JWT_ISSUER}
     audience: kickoffmatchup-api
   rate-limit:
-    # La première règle qui correspond au chemin s'applique.
     rules:
       - path: /bff/auth/**
         capacity: 10
