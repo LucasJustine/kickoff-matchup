@@ -25,7 +25,7 @@ public class MfaCodeMailBuilder implements MailBuilder<MfaCode> {
 
     @Override
     public MailContent build(MfaCode message, Locale locale) {
-        String subject = renderer.message("mfa-code.subject", locale, message.code());
+        String subject = renderer.message("mfa-code.subject", locale);
         String body = renderer.render("mail/mfa-code", locale, Map.of(
                 "subject", subject,
                 "code", message.code()));
