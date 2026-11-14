@@ -2,7 +2,7 @@ package fr.kickoffmatchup.mail_service.service;
 
 import fr.kickoffmatchup.mail_service.mail.MailContent;
 import fr.kickoffmatchup.mail_service.mail.MailFactory;
-import fr.kickoffmatchup.mail_service.mail.MailMessage;
+import fr.kickoffmatchup.mail_contract.MailMessage;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;

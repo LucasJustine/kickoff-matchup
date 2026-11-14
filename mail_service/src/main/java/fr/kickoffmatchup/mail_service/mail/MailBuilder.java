@@ -1,5 +1,6 @@
 package fr.kickoffmatchup.mail_service.mail;
 
+import fr.kickoffmatchup.mail_contract.MailMessage;
 import java.util.Locale;
 
 public interface MailBuilder<T extends MailMessage> {
