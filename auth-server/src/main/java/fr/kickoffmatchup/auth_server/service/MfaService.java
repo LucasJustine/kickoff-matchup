@@ -31,6 +31,10 @@ public class MfaService {
     private static final String PREFIX = "mfa:challenge:";
     private static final String COOLDOWN_SUFFIX = ":cooldown";
 
+    private static final String FAILURES_PREFIX = "mfa:failures:";
+    private static final int MAX_USER_FAILURES = 10;
+    private static final Duration FAILURES_WINDOW = Duration.ofMinutes(15);
+
     private final StringRedisTemplate redis;
     private final SecureRandom random = new SecureRandom();
 
@@ -39,6 +43,11 @@ public class MfaService {
     public record Resend(Long userId, String code) {}
 
     public Challenge start(Long userId) {
+        String failures = redis.opsForValue().get(FAILURES_PREFIX + userId);
+        if (failures != null && Long.parseLong(failures) >= MAX_USER_FAILURES) {
+            throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, "MFA_TOO_MANY_ATTEMPTS");
+        }
+
         byte[] bytes = new byte[32];
         random.nextBytes(bytes);
         String id = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
@@ -77,14 +86,28 @@ public class MfaService {
         boolean valid = MessageDigest.isEqual(
                 Hashing.sha256Hex(code).getBytes(StandardCharsets.UTF_8),
                 storedHash.toString().getBytes(StandardCharsets.UTF_8));
+        Object userId = redis.opsForHash().get(key, "userId");
         if (!valid) {
+            if (userId != null) {
+                recordFailure(userId.toString());
+            }
             throw new ApiException(HttpStatus.UNAUTHORIZED, "MFA_INVALID_CODE");
         }
 
-        Object userId = redis.opsForHash().get(key, "userId");
-        redis.delete(key);
+        // deux requêtes simultanées avec le bon code ne passent pas toutes les deux.
+        if (userId == null || !Boolean.TRUE.equals(redis.delete(key))) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "MFA_CHALLENGE_EXPIRED");
+        }
         redis.delete(key + COOLDOWN_SUFFIX);
         return Long.valueOf(userId.toString());
+    }
+
+    private void recordFailure(String userId) {
+        String failuresKey = FAILURES_PREFIX + userId;
+        Long failures = redis.opsForValue().increment(failuresKey);
+        if (failures != null && failures == 1) {
+            redis.expire(failuresKey, FAILURES_WINDOW);
+        }
     }
 
 
@@ -109,8 +132,7 @@ public class MfaService {
         String code = newCode();
         redis.opsForHash().putAll(key, Map.of(
                 "codeHash", Hashing.sha256Hex(code),
-                "codeExpiresAt", expiresAt(),
-                "attempts", "0"));
+                "codeExpiresAt", expiresAt()));
         redis.expire(key, CHALLENGE_TTL);
         return new Resend(Long.valueOf(userId.toString()), code);
     }
